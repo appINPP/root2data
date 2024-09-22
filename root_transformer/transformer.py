@@ -25,7 +25,6 @@ def check_required_branches(branches, required_branches):
         return False
     return True
 
-# Function to convert specific branches of a ROOT file to an H5 file
 def convert_branches_to_h5(root_file_path, tree_name, branch_names, h5_file_path):
     with uproot.open(root_file_path) as file:
         tree = file[tree_name]
@@ -38,7 +37,11 @@ def convert_branches_to_h5(root_file_path, tree_name, branch_names, h5_file_path
 
                 branch_data = tree[branch_name].array(library="np")
 
-                if branch_data.dtype == np.dtype('O'):
+                # Handle byte-encoded strings
+                if branch_data.dtype.type is np.bytes_:
+                    branch_data = np.array([x.decode('utf-8') for x in branch_data])  # Decode bytes to strings
+                elif branch_data.dtype == np.dtype('O'):
+                    # Handle objects that cannot be directly converted to floats
                     try:
                         branch_data = branch_data.astype(np.float64)
                     except ValueError:
@@ -46,6 +49,8 @@ def convert_branches_to_h5(root_file_path, tree_name, branch_names, h5_file_path
 
                 h5_file.create_dataset(branch_name, data=branch_data)
                 print(f"Branch '{branch_name}' has been successfully written to {h5_file_path}")
+
+
 
 # Function to convert specific branches of a ROOT file to an SQLite database
 def convert_branches_to_sqlite(root_file_path, tree_name, branch_names, sqlite_db_path):
@@ -69,7 +74,10 @@ def convert_branches_to_sqlite(root_file_path, tree_name, branch_names, sqlite_d
 
             branch_data = tree[branch_name].array(library="np")
 
-            if branch_data.dtype == np.dtype('O'):
+            # Handle byte-encoded strings
+            if branch_data.dtype.type is np.bytes_:
+                branch_data = np.char.decode(branch_data, 'utf-8')  # Decode byte strings to regular strings
+            elif branch_data.dtype == np.dtype('O'):
                 try:
                     branch_data = branch_data.astype(np.float64)
                 except ValueError:
@@ -85,6 +93,7 @@ def convert_branches_to_sqlite(root_file_path, tree_name, branch_names, sqlite_d
         conn.commit()
         conn.close()
         print(f"Data from '{root_file_path}' has been successfully written to {sqlite_db_path}")
+
 
 def process_directory(root_dir, tree_name, branch_names, output_dir, conversion_func):
     if not os.path.exists(output_dir):
@@ -192,7 +201,14 @@ def main():
                 h5_file_path = os.path.join(output_dir, h5_files[0])
 
                 with h5py.File(h5_file_path, 'r') as h5_file:
-                    data = {branch: h5_file[branch][:] for branch in branch_names}
+                    data = {}
+                    for branch in branch_names:
+                        dataset = h5_file[branch][:]
+                        # Handle byte-encoded strings
+                        if dataset.dtype.type is np.bytes_:
+                            data[branch] = np.array([x.decode('utf-8') for x in dataset])  # Decode bytes to strings
+                        else:
+                            data[branch] = dataset
                     df = pd.DataFrame(data)
                     df = df.sort_values(by='eventNumber').reset_index(drop=True)
                     print(df)
