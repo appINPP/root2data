@@ -134,98 +134,117 @@ def read_sqlite_table(sqlite_db_path, table_name):
     
     print("\n")
     conn.close()
+    
+# Function to read data from HDF5 file
+def read_h5_file(h5_file_path, branch_names):
+    with h5py.File(h5_file_path, 'r') as h5_file:
+        data = {}
+        for branch in branch_names:
+            if branch in h5_file:
+                dataset = h5_file[branch][:]
+                # Handle byte-encoded strings
+                if dataset.dtype.type is np.bytes_:
+                    data[branch] = np.array([x.decode('utf-8') for x in dataset])  # Decode bytes to strings
+                else:
+                    data[branch] = dataset
+            else:
+                print(f"Warning: Branch '{branch}' does not exist in the HDF5 file.")
+        
+        df = pd.DataFrame(data)
+        return df
+
+    
+    
+# Function to convert specific branches of a ROOT file into a DataFrame
+def convert_branches_to_dataframe(root_file_path, tree_name, branch_names):
+    with uproot.open(root_file_path) as file:
+        tree = file[tree_name]
+        data = {}
+        
+        for branch_name in branch_names:
+            if branch_name not in tree.keys():
+                print(f"Branch '{branch_name}' not found in the tree '{tree_name}'")
+                continue
+
+            branch_data = tree[branch_name].array(library="np")
+
+            # Handle byte-encoded strings
+            if branch_data.dtype.type is np.bytes_:
+                branch_data = np.array([x.decode('utf-8') for x in branch_data])  # Decode bytes to strings
+            data[branch_name] = branch_data
+        
+        df = pd.DataFrame(data)
+        return df
 
 def main():
-    root_dir = os.getcwd() + "/root_transformer/Data/Data_forEnergy"  # Directory containing ROOT files
+    # Predefined array of branch names (modify this array as needed)
+    branch_names = ["eventNumber", "digitX", "digitY", "digitZ"]
 
-    example_root_file = os.path.join(root_dir, os.listdir(root_dir)[0])
+    print("Choose an option:")
+    print("1: Convert from ROOT to HDF5")
+    print("2: Read HDF5 file")
     
-    print("Listing all available trees...")
-    all_trees = list_trees(example_root_file)
-    print("Available trees:")
-    for idx, tree in enumerate(all_trees):
-        print(f"{idx + 1}: {tree}")
+    choice = int(input("Enter choice (1 or 2): ").strip())
     
-    tree_choice = int(input("Choose a tree by number: ")) - 1
-    if tree_choice < 0 or tree_choice >= len(all_trees):
-        print("Invalid choice. Exiting.")
-        return
-    
-    tree_name = all_trees[tree_choice]
-    print(f"Selected tree: {tree_name}")
-    
-    all_branches = list_branches(example_root_file, tree_name)
-    print(f"All branches in the tree '{tree_name}':")
-    for idx, branch in enumerate(all_branches):
-        print(f"{idx + 1}: {branch}")
-
-    required_branches = ["eventNumber", "digitX", "digitY", "digitZ"]
-    if not check_required_branches(all_branches, required_branches):
-        print("Required branches are missing. Exiting.")
-        return
-
-    branch_choices = input("Enter branch numbers separated by commas: ")
-    branch_indices = [int(x) - 1 for x in branch_choices.split(',')]
-    branch_names = [all_branches[idx] for idx in branch_indices if 0 <= idx < len(all_branches)]
-    
-    if not branch_names:
-        print("No valid branches selected. Exiting.")
-        return
-
-    print("Choose the output format:\n1: Convert to H5\n2: Convert to SQLite")
-    choice = int(input())
-
     while choice not in [1, 2]:
-        print("Please choose either 1 or 2\n")
-        choice = int(input())
-
+        print("Invalid choice. Please choose either 1 or 2.")
+        choice = int(input("Enter choice (1 or 2): ").strip())
+    
     if choice == 1:
-        output_dir = os.getcwd() + "/root_transformer/Data_forEnergy_h5"  # Directory to save the H5 files
-        process_directory(root_dir, tree_name, branch_names, output_dir, convert_branches_to_h5)
+        # Conversion from ROOT to HDF5
+        root_dir = os.getcwd() + "/annie-temp/root_transformer/Data/Data_forEnergy"  # Directory containing ROOT files
+        output_dir = os.getcwd() + "/annie-temp/root_transformer/Data_forEnergy_h5"  # Directory to save HDF5 files
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # Process all ROOT files in the directory
+        for filename in os.listdir(root_dir):
+            if filename.endswith(".root"):
+                root_file_path = os.path.join(root_dir, filename)
+                print(f"Processing {root_file_path}...")
+
+                # List trees and select the first one
+                all_trees = list_trees(root_file_path)
+                if not all_trees:
+                    print(f"No trees found in {root_file_path}. Skipping...")
+                    continue
+                
+                tree_name = all_trees[0]  # Selecting the first tree for conversion
+                print(f"Using tree: {tree_name}")
+                
+                # Convert selected branches to HDF5
+                output_file = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}.h5")
+                convert_branches_to_h5(root_file_path, tree_name, branch_names, output_file)
+
+                print(f"Data from {root_file_path} has been written to {output_file}")
 
     elif choice == 2:
-        output_dir = os.getcwd() + "/root_transformer/Data_forEnergy_sqlite"  # Directory to save the SQLite files
-        process_directory(root_dir, tree_name, branch_names, output_dir, convert_branches_to_sqlite)
-
-    print("Would you like to view the file? [Y,n]:")
-    view = str(input()).strip().lower()
-
-    while view not in ["y", "n", ""]:
-        print("Choose either [Y,n]:")
-        view = str(input()).strip().lower()
-
-    if view in ["y", ""]:
-        if choice == 1:
-            h5_files = [f for f in os.listdir(output_dir) if f.endswith('.h5')]
-            if h5_files:
-                h5_file_path = os.path.join(output_dir, h5_files[0])
-
-                with h5py.File(h5_file_path, 'r') as h5_file:
-                    data = {}
-                    for branch in branch_names:
-                        dataset = h5_file[branch][:]
-                        # Handle byte-encoded strings
-                        if dataset.dtype.type is np.bytes_:
-                            data[branch] = np.array([x.decode('utf-8') for x in dataset])  # Decode bytes to strings
-                        else:
-                            data[branch] = dataset
-                    df = pd.DataFrame(data)
-                    df = df.sort_values(by='eventNumber').reset_index(drop=True)
-                    print(df)
-
-            else:
-                print("No H5 files found in the output directory.")
-                
-        elif choice == 2:
-            sqlite_files = [f for f in os.listdir(output_dir) if f.endswith('.sqlite')]
-            if sqlite_files:
-                sqlite_db_path = os.path.join(output_dir, sqlite_files[0])
-                table_names = get_table_names(sqlite_db_path)
-
-                for table_name in table_names:
-                    read_sqlite_table(sqlite_db_path, table_name)
-            else:
-                print("No SQLite files found in the output directory.")
+        # Reading from HDF5
+        h5_dir = os.getcwd() + "/annie-temp/root_transformer/Data_forEnergy_h5"  # Directory containing HDF5 files
+        h5_files = [f for f in os.listdir(h5_dir) if f.endswith('.h5')]
+        
+        if not h5_files:
+            print("No HDF5 files found. Exiting.")
+            return
+        
+        print("Available HDF5 files:")
+        for idx, h5_file in enumerate(h5_files):
+            print(f"{idx + 1}: {h5_file}")
+        
+        h5_choice = int(input("Choose an HDF5 file by number: ").strip()) - 1
+        if h5_choice < 0 or h5_choice >= len(h5_files):
+            print("Invalid choice. Exiting.")
+            return
+        
+        h5_file_path = os.path.join(h5_dir, h5_files[h5_choice])
+        
+        print(f"Reading file: {h5_file_path}")
+        df = read_h5_file(h5_file_path, branch_names)
+        
+        # Sort and display DataFrame
+        if 'eventNumber' in df.columns:
+            df = df.sort_values(by='eventNumber').reset_index(drop=True)
+        print(df)
 
 if __name__ == "__main__":
     main()
