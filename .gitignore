@@ -1,0 +1,11 @@
+.cache/*
+.log/*
+
+.backup/
+.manos/
+.utils/
+.venv/
+.env/
+.test/
+.vscode/
+data/
