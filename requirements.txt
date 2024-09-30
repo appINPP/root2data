@@ -1,0 +1,6 @@
+pandas
+numpy
+awkward
+uproot
+h5py
+psycopg2-binary
