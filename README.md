@@ -1,4 +1,4 @@
-<img width="243" alt="root2data_logo" src="https://github.com/user-attachments/assets/4b9d8739-b41d-4d2d-b84a-ee4724f9e00c"> 
+<img width="256" alt="root2data_logo" src="https://github.com/user-attachments/assets/fae94adc-1705-4e6b-a0a2-8f166f7940e4">
 
 # Convert .root files to other data formats
 
