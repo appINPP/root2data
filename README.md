@@ -50,5 +50,5 @@ pip install -r requirements.txt
 
 ## License
 
-This project is licensed under the Apache License. See the LICENSE file for details.
+This project is licensed under the Apache License. See the [LICENSE](https://github.com/appINPP/root2data/blob/main/LICENSE) for details.
 
