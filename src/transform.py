@@ -386,6 +386,9 @@ def main():
 
     if not os.path.exists(h5_dir):
         os.makedirs(h5_dir)
+        
+    if not os.path.exists(root_dir):
+        os.makedirs(root_dir)
 
     while True:
         print("Please choose an option:")
