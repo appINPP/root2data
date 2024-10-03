@@ -184,8 +184,9 @@ def scan_for_new_root_files(root_dir: str, h5_dir:str=None, sqlite_dir:str=None)
     else:
         print(f'New root files: {new_root_for_sqlite} for sqlite')
 
-    new_root_files_h5 = [os.path.join(os.getcwd(), 'data', 'root', x) for x in new_root_for_h5]
-    new_root_files_sqlite = [os.path.join(os.getcwd(), 'data', 'root', x) for x in new_root_for_sqlite]
+    # Go one directory up and then search for data/root
+    new_root_files_h5 = [os.path.join(os.path.dirname(os.getcwd()), 'data', 'root', x) for x in new_root_for_h5]
+    new_root_files_sqlite = [os.path.join(os.path.dirname(os.getcwd()), 'data', 'root', x) for x in new_root_for_sqlite]
 
     return new_root_files_h5, new_root_files_sqlite
 
@@ -375,8 +376,10 @@ def main():
     current_directory = os.getcwd()
 
     # Construct the paths
-    root_dir = os.path.join(current_directory, "data", "root")  # Directory containing ROOT files
-    h5_dir = os.path.join(current_directory, "data", "h5") 
+    
+    parent_directory = os.path.dirname(current_directory)
+    root_dir = os.path.join(parent_directory, "data", "root")  # Directory containing ROOT files
+    h5_dir = os.path.join(parent_directory, "data", "h5") 
 
     # sqlite_dir = f"{os.getcwd()}/data/sqlite/"
     columns_to_find =['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']
