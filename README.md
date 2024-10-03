@@ -43,11 +43,24 @@ pip install -r requirements.txt
 ![demo](https://github.com/user-attachments/assets/d49a68ae-dff3-4ec4-b0f3-1aab664b7dbf)
 
 
+## Walkthrough
 
-
-
-
-
+### Clone the repository
+![Screenshot from 2024-10-03 12-44-40](https://github.com/user-attachments/assets/985c0d09-75a7-4035-9125-296ebd91a448)
+### Go the executable python code at root2data/src
+![Screenshot from 2024-10-03 12-45-44](https://github.com/user-attachments/assets/7c8ed717-6cb3-4205-acb6-ec2934f9247a)
+### You are promted to pick an action (I pick 2)
+![Screenshot from 2024-10-03 12-46-14](https://github.com/user-attachments/assets/ca964fe4-158c-4eb5-af62-093a4f6e8a66)
+### Add root files to the root2data/data/root directory
+![Screenshot from 2024-10-03 12-51-56](https://github.com/user-attachments/assets/8d16d686-bba9-4cdd-a266-da5c3d5812ac)
+### Your files are now converted to HDF5 format
+![Screenshot from 2024-10-03 12-52-56](https://github.com/user-attachments/assets/22cf6911-0bc2-45ae-8b28-b28524348221)
+### To change the features you want to extract from the root file to the h5 go to line 203 and add them to the array
+![Screenshot from 2024-10-03 12-54-31](https://github.com/user-attachments/assets/d15c771e-27ed-46b9-a9d7-01472b88b8ac)
+### After conversion i can now read the h5 file that i created by choosing (1)
+![Screenshot from 2024-10-03 12-55-26](https://github.com/user-attachments/assets/d5a3097b-0a68-429c-9de0-24b63249bbc8)
+### The HDF5 file is shown as a dataframe
+![Screenshot from 2024-10-03 12-56-09](https://github.com/user-attachments/assets/2bb7dba9-176f-4fbb-8413-a5d5a31a637f)
 
 
 
