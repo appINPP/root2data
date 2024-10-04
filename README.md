@@ -44,7 +44,7 @@ pip install -r requirements.txt
 ![Screenshot from 2024-10-03 12-44-40](https://github.com/user-attachments/assets/985c0d09-75a7-4035-9125-296ebd91a448)
 ### Go to the executable python code at root2data/src
 ![Screenshot from 2024-10-03 12-45-44](https://github.com/user-attachments/assets/7c8ed717-6cb3-4205-acb6-ec2934f9247a)
-### You are promted to select an action (here, I select 2)
+### You are prompted to select an action (here, I select 2)
 ![Screenshot from 2024-10-03 12-46-14](https://github.com/user-attachments/assets/ca964fe4-158c-4eb5-af62-093a4f6e8a66)
 ### Add root files to the root2data/data/root directory
 ![Screenshot from 2024-10-03 12-51-56](https://github.com/user-attachments/assets/8d16d686-bba9-4cdd-a266-da5c3d5812ac)
