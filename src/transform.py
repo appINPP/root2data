@@ -167,7 +167,18 @@ def hdf5_hierarchy(h5_file_path: str) -> None:
 
 
 def scan_for_new_root_files(root_dir: str, h5_dir:str=None, sqlite_dir:str=None) -> List[str]:
+    """
+    Scans the root directory for new files that have not been converted to h5 AND sqlite files.
 
+    Parameters:
+     - root_dir (str): The directory containing the ROOT files.
+     - h5_dir (str): The directory containing the HDF5 files.
+     - sqlite_dir (str): The directory containing the SQLite files.
+    
+    Returns:
+     - new_root_files (list): A list of file paths to the new ROOT files.
+    
+    """
     root_files = os.listdir(root_dir)
     h5_files = [x.split('.h5')[0] for x in os.listdir(h5_dir)]
     sqlite_files = [x.split('.sqlite3')[0] for x in os.listdir(sqlite_dir)]
@@ -192,13 +203,39 @@ def scan_for_new_root_files(root_dir: str, h5_dir:str=None, sqlite_dir:str=None)
 
 
 def list_h5_files(h5_dir: str) -> List[str]:
+    """
+    Lists all HDF5 files in the given directory.
 
+    Parameters:
+     - h5_dir (str): Directory to search for HDF5 files.
+
+    Returns:
+     - List[str]: List of HDF5 file paths.
+    """
     h5_files = [f for f in os.listdir(h5_dir) if f.endswith('.h5')]
     return h5_files
 
 
 def root2h5(root_files: List[str], h5_dir:str) -> None:
+    """
+    Converts a list of root files to HDF5 format and saves them in the specified directory.
+    - The function converts each root file in the `root_files` list to HDF5 format.
+    - The converted HDF5 files are saved in the `h5_dir` directory.
+    - The function uses the `root_to_arrays()` function to convert the root files to arrays.
+    - The converted arrays are then saved to HDF5 files using the `save_to_h5()` function.
 
+    Parameters:
+     - root_files (List[str]): A list of root file paths to be converted.
+     - h5_dir (str): The directory where the converted HDF5 files will be saved.
+
+    Returns:
+        None
+
+    Examples:
+        >>> root_files = ['/path/to/file1.root', '/path/to/file2.root']
+        >>> h5_dir = '/path/to/h5_files'
+        >>> convert_new_root_files(root_files, h5_dir)
+    """
     for file in root_files:
         columns_to_find = ['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']#IMPORTANT: columns to extract from the ROOT file should be dynamic
         h5_file_path = os.path.join(h5_dir, os.path.basename(file).replace('.root', '.h5'))
@@ -209,7 +246,23 @@ def root2h5(root_files: List[str], h5_dir:str) -> None:
 
 
 def get_tree_branches(root_file, columns_to_find) -> Dict[str, List[str]]: 
+    """
+    Extracts and returns the columns of interest from a ROOT file. It identifies the tree containing the branches(columns_to_find)
+    and returns a dictionary mapping tree names to the list of these columns.
 
+    Parameters:
+     - root_file (str): The file path to the ROOT file.
+     - cols_to_find (List[str]): A list of columns to extract from the ROOT file.
+
+    Returns:
+     - tree_dict (Dict): A dictionary where the keys are tree names and the values are lists of columns found in those trees.
+    
+    Notes:
+    - A modification is used because the trees created in the PreAnalysis script are <ins>**larger**</ins> than the buffer size
+    and therefore ROOT creates multiple namecycles (i.e. there are two trees created, named "ProcessedEvents;8" and 
+    "ProcessedEvents;7"). We want to extract the branches from the more recent tree, i.e. the tree with the greater cycle number. 
+    The following set is used to store the basenames of the trees we have already processed.
+    """
     tree_basenames = set() 
     tree_dict = {}
     for tree_name in root_file.keys():
@@ -217,18 +270,55 @@ def get_tree_branches(root_file, columns_to_find) -> Dict[str, List[str]]:
         if tree_name in tree_basenames: 
             continue
         tree = root_file[tree_name]
+        if (tree.classname != 'TTree'):
+            continue
         if all(col in tree.keys() for col in columns_to_find): # check if all requested columns are in the tree
             tree_list = [col for col in columns_to_find if col in tree.keys()] # get a list of the columns that are in the tree: eg. phaseIITriggerTree
             tree_dict[tree_name] = tree_list
             print(f"Found columns: {tree_list} in tree: {tree_name} for file: {os.path.basename(root_file.file_path)}")
         else:
             print(f"Columns not found in tree: {tree_name}")
-        #Add tree basename to the set, after we have extracted the branches
+         # add tree basename to the set, after we have extracted the branches
         tree_basenames.add(tree_name)
     return tree_dict
 
 
 def root_to_dict_of_arrays(root_files_path: str, columns_to_find: List[str]) -> Dict[str, np.ndarray]:
+    """
+    Extract data from a ROOT file and return them as a dictionary of NumPy ndarrays.
+
+    Parameters:
+     - root_files_path (str): The path to the ROOT file from which data is to be extracted.
+     - columns_to_find (List[str]): A list of column names to be extracted from the ROOT file.
+
+    Returns:
+     - dict_of_arrays (Dict[str, np.ndarray]): A dictionary where keys are the column names and values are NumPy arrays containing data.
+
+    Examples:
+    >>> root_files_path = "data/annie_data.root"
+    >>> columns_to_find = ["eventNumber", "digitX", "digitY", "digitT"]
+    >>> dict_of_arrays = root_to_dict_of_arrays(root_files_path, columns_to_find)
+    >>> print(dict_of_arrays)
+    {'eventNumber': array([    44,     72,     84, ..., 390861, 391175, 391191], dtype=int32),
+    'digitX': array([array([ -15.23916721,  -47.80203247,  -67.9304657 ,  -68.50760651,
+                15.04926872, -112.59906006,  -98.98416901,  -98.98416901,
+               -93.81991577,  -59.74597549,  -58.7647934 ,  -27.30049896,
+               -59.25538254,  -27.30049896,   27.20409203, -105.66539001,
+              -105.66539001,  -93.81991577,  -27.06107521,  -54.94448471,
+              ..... ..... ...... ),
+    'digitY': array([array([149.68470648, 150.18379095, 150.25854376, 149.82546881,
+              149.82546881,  60.22801474,  60.22801474, -26.48331949,
+               15.47083214, -71.6477215 , -26.75432321,  60.20386007,
+               60.20386007, -26.4035618 ,  60.2419956 , 100.74185827,
+               15.47083214, 100.74185827,  15.43998197, 100.59675482,
+              100.71101263,  15.48869291,  15.43998197]),
+              ....... ....... .......),
+    'digitT': array([array([ 7.11189461,  7.33561611,  7.88873792, 15.27171946,  9.84215736,
+               5.76198912,  5.88614655,  6.79743958,  5.8970437 ,  9.83736324,
+               7.01077414,  6.06781387,  5.08803034,  7.9968996 ,  7.1203146 ,
+               6.65937638,  6.39350533,  6.07382917,  6.04535913,  5.72223711,
+               6.41045713,  6.88058758,  5.54067039]), dtype=object)}
+    """
     root_file = uproot.open(root_files_path)
     tree_and_branches = get_tree_branches(root_file, columns_to_find)
     dict_of_arrays = {}
@@ -239,7 +329,27 @@ def root_to_dict_of_arrays(root_files_path: str, columns_to_find: List[str]) -> 
 
 
 def root_to_awkward_arrays(root_files_path: str, columns_to_find: List[str]) -> np.ndarray:
+    """
+    Extract data from a ROOT file and return it as an Awkward Array.
 
+    Parameters:
+     - root_files_path (str): The path to the ROOT file from which data is to be extracted.
+     - columns_to_find (List[str]): A list of column names to be extracted from the ROOT file.
+
+    Returns:
+     - awkward_data (ak.Array): An Awkward Array containing the extracted data.
+
+    Examples:
+    >>> root_files_path = "data/annie_data.root"
+    >>> columns_to_find = ["eventNumber", "digitX", "digitY", "digitZ", "digitT"]
+    >>> awkward_data = root_to_awkward_arrays(root_files_path, columns_to_find)
+    >>> print(awkward_data)    
+        <Array [{eventNumber: 44, ...}, ..., {...}] type='2108 * {eventNumber: int3...'>
+    >>> print(awkward_data['eventNumber'] )
+        <Array [0, 1, 2, ...] type='2108 * int32'>
+    >>> print(awkward_data['digitX'] )
+        <Array [[-15.2, -47.8, ..., 26.9, -54.9], ...] type='2108 * var * float64'>
+    """
     root_file = uproot.open(root_files_path)
     tree_and_branches = get_tree_branches(root_file, columns_to_find)
     for tree_name, cols in tree_and_branches.items():
@@ -248,8 +358,13 @@ def root_to_awkward_arrays(root_files_path: str, columns_to_find: List[str]) -> 
 
 
 def save_to_h5(arrays: Dict[str, np.ndarray], awkward_arrays, h5_file_path: str) -> None:
+    '''
+    The code converts an array of byte strings into a list of NumPy arrays of float64.
+    It handles variable-length sequences by using h5py.special_dtype(vlen=np.dtype('float64')).
 
-
+    * A special dtype dt is created for variable-length sequences of float64 using h5py.special_dtype.
+    * The list_of_arrays is converted to a NumPy array with the special dtype dt.
+    '''
     with h5py.File(h5_file_path, 'w') as h5_file: #os.path.basename(h5_file_path).split('.h5')[0]
         group_name = os.path.basename(h5_file_path).split('.h5')[0]
         group = h5_file.create_group(group_name)
@@ -277,6 +392,16 @@ def save_to_h5(arrays: Dict[str, np.ndarray], awkward_arrays, h5_file_path: str)
 
 
 def preprocessing(item: str) -> np.ndarray:
+    """
+    Preprocesses the data in the byte string format and converts it to a NumPy array of float64.
+
+    Parameters:
+        - item (str): A byte string containing the data.
+
+    Returns:
+        - np.array(float_data, dtype=np.float64): A NumPy array containing the data.
+
+    """
     string_data = item.decode('utf-8').strip('[]').replace('\n', '').strip()
     string_data = re.sub(r'\s+', ' ', string_data).split(' ')
     float_data = [float(x) for x in string_data]
@@ -284,7 +409,38 @@ def preprocessing(item: str) -> np.ndarray:
 
 
 def h5_to_json(h5_file_path: str) -> str:
+    """
+    Convert the structure of an H5 file to a JSON-like format.
 
+    Parameters:
+        - h5_file_path (str): The path to the H5 file.
+
+    Returns:
+        - str: A JSON-like string representing the structure of the H5 file.
+          The structure includes groups and datasets with their respective
+          types, shapes, and data types.
+
+    Example:
+    >>> h5_file_path = 'path_to_your_file.h5'
+    >>> print(h5_to_json(h5_file_path))
+    {
+        "/": {
+            "type": "Group",
+            "children": {
+                "/group1": {
+                    "type": "Group",
+                    "children": {
+                        "/group1/dataset1": {
+                            "type": "Dataset",
+                            "shape": [10, 10],
+                            "dtype": "float64"
+                        }
+                    }
+                }
+            }
+        }
+    }
+    """
     def visit(name, node):
         if isinstance(node, h5py.Group):
             structure[name] = {"type": "Group", "children": {}}
@@ -301,7 +457,17 @@ def h5_to_json(h5_file_path: str) -> str:
 
 
 def create_dataframe_and_show_structure(h5_file_path: str) -> pd.DataFrame:
- 
+    """
+    Create a pandas DataFrame from an HDF5 file and show the structure of the file.
+    This function reads an HDF5 file and extracts datasets from it to create a pandas DataFrame.
+    It prints the structure of the HDF5 file, including groups and datasets, along with their types and lengths.
+    
+    Parameters:
+        - h5_file_path (str): The path to the HDF5 file.
+    
+    Returns:
+        - pd.DataFrame: A DataFrame containing the data from the HDF5 file.
+    """
     print(5*'-----------------------------------')
     total_data = {}
 
@@ -315,7 +481,7 @@ def create_dataframe_and_show_structure(h5_file_path: str) -> pd.DataFrame:
                 for subkey in h5_file[key].keys():
                     item = h5_file[key][subkey]
                     if isinstance(item, h5py.Dataset):
-                        print(f"  |-> Dataset: {subkey} of type: {item.dtype}, has length: {len(item[:])} | type: {type(item[:])} | dtype: {item.dtype}")
+                        print(f"  |-> Dataset: {subkey} has length: {len(item[:])} | type: {type(item[:])} | dtype: {item.dtype}")
                     else:
                         print(f"  Subkey: {subkey} is a group")
                         for subsubkey in item.keys():
@@ -337,13 +503,19 @@ def create_dataframe_and_show_structure(h5_file_path: str) -> pd.DataFrame:
             # Print the data
             # print(f"Data in the '{key}' dataset:", data)
     print(f'\nData for {h5_file_path}:')
-
-
     return pd.DataFrame(total_data)
 
 
 def traverse_hdf5(h5_file_path: str) -> Dict:
+    """
+    Traverse all groups and datasets in an HDF5 file and retrieve their contents.
 
+    Parameters:
+        - h5_file_path (str): The path to the HDF5 file.
+
+    Returns:
+        - dict: A dictionary containing information about all groups and datasets in the file.
+    """
     def collect_info(name, node):
         if isinstance(node, h5py.Group):
             info[name] = {
@@ -380,13 +552,16 @@ def main():
     parent_directory = os.path.dirname(current_directory)
     root_dir = os.path.join(parent_directory, "data", "root")  # Directory containing ROOT files
     h5_dir = os.path.join(parent_directory, "data", "h5") 
+    sqlite_dir = os.path.join(parent_directory, "data", "sqlite") 
 
-    # sqlite_dir = f"{os.getcwd()}/data/sqlite/"
     columns_to_find =['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']
 
     if not os.path.exists(h5_dir):
         os.makedirs(h5_dir)
-        
+
+    if not os.path.exists(sqlite_dir):
+        os.makedirs(sqlite_dir)
+
     if not os.path.exists(root_dir):
         os.makedirs(root_dir)
 
@@ -418,10 +593,12 @@ def main():
         
         elif choice == '2':
             print(f"Scanning {root_dir} for new ROOT files to convert...")
-            new_root_files_h5, new_root_files_sqlite = scan_for_new_root_files(root_dir, h5_dir, sqlite_dir=None)
+            new_root_files_h5, new_root_files_sqlite = scan_for_new_root_files(root_dir, h5_dir, sqlite_dir)
 
             if not new_root_files_h5:
-                print("No new ROOT files found for conversion.")
+                print("No new ROOT files found for h5-conversion.")
+            elif not new_root_files_sqlite:
+                print("No new ROOT files found for sqlite-conversion.")
             else:
                 print(f"Converting {len(new_root_files_h5)} ROOT files to HDF5 format...")
                 root2h5(new_root_files_h5, h5_dir)
