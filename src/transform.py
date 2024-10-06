@@ -657,25 +657,6 @@ def get_table_names(sqlite_db_path):
     return [table[0] for table in tables]
 
 
-def read_sqlite_table(sqlite_db_path, table_name):
-    conn = sqlite3.connect(sqlite_db_path)
-    cursor = conn.cursor()
-    query = f'SELECT * FROM "{table_name}"'
-    cursor.execute(query)
-    rows = cursor.fetchall()
-    column_names = [description[0] for description in cursor.description]
-    
-    print(f"Table: {table_name}")
-    print("-" * (len(column_names) * 15))
-    print(" | ".join(column_names))
-    print("-" * (len(column_names) * 15))
-    
-    for row in rows:
-        print(" | ".join(map(str, row)))
-    
-    print("\n")
-    conn.close()
-
 # Function to list SQLite files
 def list_sqlite_files(sqlite_dir):
     return [file for file in os.listdir(sqlite_dir) if file.endswith(".sqlite3")]
@@ -778,9 +759,8 @@ def main():
                         table_choice = int(input(f"Select a table to read (1-{len(table_names)}): "))
                         selected_table = table_names[table_choice - 1]
                         df = sqlite_to_dataframe(selected_sqlite_file, selected_table)
-                        print(df)
                         # Read and display the selected table
-                        # read_sqlite_table(selected_sqlite_file, selected_table)
+                        print(df)
             else:
                 print("Invalid choice! Please enter either 1 or 2.")
                 
