@@ -1,3 +1,4 @@
+import sqlite3
 import uproot
 import h5py
 import argparse
@@ -166,31 +167,17 @@ def hdf5_hierarchy(h5_file_path: str) -> None:
             print(data)
 
 
+# Your existing function to scan for ROOT files
 def scan_for_new_root_files(root_dir: str, h5_dir: str = None, sqlite_dir: str = None) -> List[str]:
-    """
-    Scans the root directory for new files that have not been converted to HDF5 and/or SQLite.
-    Asks the user whether to convert to HDF5, SQLite, or both, and then asks them to select files accordingly.
-
-    Parameters:
-     - root_dir (str): The directory containing the ROOT files.
-     - h5_dir (str): The directory containing the HDF5 files.
-     - sqlite_dir (str): The directory containing the SQLite files.
-    
-    Returns:
-     - new_root_files_h5 (list): A list of file paths to the selected ROOT files for HDF5 conversion.
-     - new_root_files_sqlite (list): A list of file paths to the selected ROOT files for SQLite conversion.
-    """
     root_files = os.listdir(root_dir)
     h5_files = [x.split('.h5')[0] for x in os.listdir(h5_dir)]
     sqlite_files = [x.split('.sqlite3')[0] for x in os.listdir(sqlite_dir)]
 
-    # Filter new files for HDF5 and SQLite
     new_root_for_h5 = [x for x in root_files if x.endswith('.root') and x.split('.root')[0] not in h5_files]
     new_root_for_sqlite = [x for x in root_files if x.endswith('.root') and x.split('.root')[0] not in sqlite_files]
 
     new_root_files_h5, new_root_files_sqlite = [], []
 
-    # Ask the user if they want to convert to HDF5, SQLite, or both
     print("\nDo you want to convert to:")
     print("1. HDF5")
     print("2. SQLite")
@@ -201,37 +188,33 @@ def scan_for_new_root_files(root_dir: str, h5_dir: str = None, sqlite_dir: str =
         if not new_root_for_h5:
             print('No new root files found for HDF5.')
         else:
-            print(f'New root files for HDF5: {new_root_for_h5}')
             new_root_files_h5 = user_file_selection(new_root_for_h5)
 
     elif conversion_choice == '2':  # Convert to SQLite
         if not new_root_for_sqlite:
             print('No new root files found for SQLite.')
         else:
-            print(f'New root files for SQLite: {new_root_for_sqlite}')
             new_root_files_sqlite = user_file_selection(new_root_for_sqlite)
 
     elif conversion_choice == '3':  # Convert to both HDF5 and SQLite
         if not new_root_for_h5:
             print('No new root files found for HDF5.')
         else:
-            print(f'New root files for HDF5: {new_root_for_h5}')
             new_root_files_h5 = user_file_selection(new_root_for_h5)
 
         if not new_root_for_sqlite:
             print('No new root files found for SQLite.')
         else:
-            print(f'New root files for SQLite: {new_root_for_sqlite}')
             new_root_files_sqlite = user_file_selection(new_root_for_sqlite)
 
     else:
         print("Invalid option. No files will be converted.")
 
-    # Generate full paths for the selected files
     new_root_files_h5 = [os.path.join(root_dir, x) for x in new_root_files_h5]
     new_root_files_sqlite = [os.path.join(root_dir, x) for x in new_root_files_sqlite]
 
     return new_root_files_h5, new_root_files_sqlite
+
 
 
 def list_h5_files(h5_dir: str) -> List[str]:
@@ -575,7 +558,7 @@ def traverse_hdf5(h5_file_path: str) -> Dict:
 
     return info
 
-
+# Function to select files as implemented before
 def user_file_selection(files_list):
     """
     Displays the available files and lets the user choose specific ones.
@@ -590,13 +573,10 @@ def user_file_selection(files_list):
     for idx, file in enumerate(files_list):
         print(f"{idx + 1}. {file}")
 
-    # Ask if the user wants to convert all files or select specific ones
     choice = input("\nDo you want to convert all files? (y/n): ").strip().lower()
-
     if choice == 'y':
-        return files_list  # Convert all files
+        return files_list
     else:
-        # Let the user choose specific files by index
         selected_files = []
         print("\nEnter the numbers of the files you want to convert, separated by commas:")
         selection = input().split(",")
@@ -605,67 +585,220 @@ def user_file_selection(files_list):
                 selected_files.append(files_list[int(idx) - 1])
             except (ValueError, IndexError):
                 print(f"Invalid input: {idx}. Skipping this file.")
-
         return selected_files
     
+# Function to convert branches to SQLite
+def convert_branches_to_sqlite(root_file_path, tree_name, branch_names, sqlite_db_path):
+    with uproot.open(root_file_path) as file:
+        tree = file[tree_name]
 
+        conn = sqlite3.connect(sqlite_db_path)
+        cursor = conn.cursor()
+
+        base_name = os.path.splitext(os.path.basename(root_file_path))[0]
+        sanitized_table_name = f'"{base_name.replace(".", "_")}"'
+
+        columns = ", ".join([f'"{branch_name}" REAL' for branch_name in branch_names])
+        cursor.execute(f"CREATE TABLE IF NOT EXISTS {sanitized_table_name} ({columns})")
+
+        data = []
+        for branch_name in branch_names:
+            if branch_name not in tree.keys():
+                print(f"Branch '{branch_name}' not found in the tree '{tree_name}'")
+                continue
+
+            branch_data = tree[branch_name].array(library="np")
+
+            if branch_data.dtype.type is np.bytes_:
+                branch_data = np.char.decode(branch_data, 'utf-8')
+            elif branch_data.dtype == np.dtype('O'):
+                try:
+                    branch_data = branch_data.astype(np.float64)
+                except ValueError:
+                    branch_data = np.array([str(item) for item in branch_data], dtype='S')
+
+            data.append(branch_data)
+
+        data = np.column_stack(data)
+
+        placeholders = ", ".join(["?"] * len(branch_names))
+        cursor.executemany(f"INSERT INTO {sanitized_table_name} VALUES ({placeholders})", data)
+
+        conn.commit()
+        conn.close()
+        print(f"Data from '{root_file_path}' has been successfully written to {sqlite_db_path}")
+
+
+def read_sqlite_table(sqlite_db_path, table_name):
+    conn = sqlite3.connect(sqlite_db_path)
+    cursor = conn.cursor()
+    query = f'SELECT * FROM "{table_name}"'
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    column_names = [description[0] for description in cursor.description]
+    
+    print(f"Table: {table_name}")
+    print("-" * (len(column_names) * 15))
+    print(" | ".join(column_names))
+    print("-" * (len(column_names) * 15))
+    
+    for row in rows:
+        print(" | ".join(map(str, row)))
+    
+    print("\n")
+    conn.close()
+    
+def get_table_names(sqlite_db_path):
+    conn = sqlite3.connect(sqlite_db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    tables = cursor.fetchall()
+    conn.close()
+    return [table[0] for table in tables]
+
+
+def read_sqlite_table(sqlite_db_path, table_name):
+    conn = sqlite3.connect(sqlite_db_path)
+    cursor = conn.cursor()
+    query = f'SELECT * FROM "{table_name}"'
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    column_names = [description[0] for description in cursor.description]
+    
+    print(f"Table: {table_name}")
+    print("-" * (len(column_names) * 15))
+    print(" | ".join(column_names))
+    print("-" * (len(column_names) * 15))
+    
+    for row in rows:
+        print(" | ".join(map(str, row)))
+    
+    print("\n")
+    conn.close()
+
+# Function to list SQLite files
+def list_sqlite_files(sqlite_dir):
+    return [file for file in os.listdir(sqlite_dir) if file.endswith(".sqlite3")]
+
+def sqlite_to_dataframe(sqlite_db_path, table_name):
+    """
+    Transforms data from a specified SQLite table into a pandas DataFrame.
+
+    Parameters:
+    - sqlite_db_path (str): Path to the SQLite database file.
+    - table_name (str): Name of the table to read data from.
+
+    Returns:
+    - pd.DataFrame: DataFrame containing the data from the specified SQLite table.
+    """
+    # Create a connection to the SQLite database
+    conn = sqlite3.connect(sqlite_db_path)
+    
+    # Query to select all data from the specified table
+    query = f'SELECT * FROM "{table_name}"'
+    
+    # Read the data into a DataFrame
+    df = pd.read_sql_query(query, conn)
+    
+    # Close the database connection
+    conn.close()
+    # Convert byte columns to string or appropriate numerical formats
+    for column in df.columns:
+        # Check if the column dtype is object (which includes bytes)
+        if df[column].dtype == 'object':
+            # Attempt to decode bytes and handle any conversion issues
+            df[column] = df[column].apply(lambda x: x.decode('utf-8') if isinstance(x, bytes) else x)
+            
+            # Convert string representations of numerical arrays to actual numpy arrays
+            try:
+                df[column] = df[column].apply(lambda x: np.fromstring(x.strip('[]'), sep=' ') if '[' in x else x)
+            except Exception as e:
+                print(f"Error converting column '{column}': {e}")
+
+    
+    return df
+
+# Main function to include SQLite and HDF5 conversions
 def main():
     current_directory = os.getcwd()
+    # parent_directory = os.path.dirname(current_directory)
+    root_dir = os.path.join(current_directory, "data", "root")
+    h5_dir = os.path.join(current_directory, "data", "h5")
+    sqlite_dir = os.path.join(current_directory, "data", "sqlite")
 
-    # Construct the paths
-    root_dir = os.path.join(current_directory, "data", "root")  # Directory containing ROOT files
-    h5_dir = os.path.join(current_directory, "data", "h5") 
-    sqlite_dir = os.path.join(current_directory, "data", "sqlite") 
+    columns_to_find = ['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']
 
-    columns_to_find =['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']
-
-    if not os.path.exists(h5_dir):
-        os.makedirs(h5_dir)
-
-    if not os.path.exists(sqlite_dir):
-        os.makedirs(sqlite_dir)
-
-    if not os.path.exists(root_dir):
-        os.makedirs(root_dir)
+    os.makedirs(h5_dir, exist_ok=True)
+    os.makedirs(sqlite_dir, exist_ok=True)
+    os.makedirs(root_dir, exist_ok=True)
 
     while True:
-        print("Please choose an option:")
-        print("1. Read an HDF5 file")
-        print("2. Convert ROOT files to HDF5 and save them")
+        print("\nPlease choose an option:")
+        print("1. Read an HDF5 or SQLite file")
+        print("2. Convert ROOT files to HDF5 or SQLite")
         print("3. Exit")
         choice = input("Enter your choice (1/2/3): ")
 
         if choice == '1':
-            # List all available HDF5 files
-            h5_files = list_h5_files(h5_dir)
-
-            if not h5_files:
-                print(f"No HDF5 files found in {h5_dir}.")
+            print("Select the file type you want to read:")
+            print("1. HDF5")
+            print("2. SQLite")
+            choice = input("Enter 1 or 2: ")
+            if choice == '1':
+                h5_files = list_h5_files(h5_dir)
+                if not h5_files:
+                    print(f"No HDF5 files found in {h5_dir}.")
+                else:
+                    print("Available HDF5 files:")
+                    for idx, h5_file in enumerate(h5_files):
+                        print(f"{idx + 1}. {h5_file}")
+                    file_choice = int(input(f"Select a file to read (1-{len(h5_files)}): "))
+                    selected_h5_file = os.path.join(h5_dir, h5_files[file_choice - 1])
+                    df = create_dataframe_and_show_structure(selected_h5_file)
+                    print(df)
+            elif choice == '2':
+                sqlite_files = list_sqlite_files(sqlite_dir)
+                if not sqlite_files:
+                    print(f"No SQLite files found in {sqlite_dir}.")
+                else:
+                    print("Available SQLite files:")
+                    for idx, sqlite_file in enumerate(sqlite_files):
+                        print(f"{idx + 1}. {sqlite_file}")
+                    file_choice = int(input(f"Select a file to read (1-{len(sqlite_files)}): "))
+                    selected_sqlite_file = os.path.join(sqlite_dir, sqlite_files[file_choice - 1])
+                    
+                    # Get the table names from the selected SQLite file
+                    table_names = get_table_names(selected_sqlite_file)
+                    if not table_names:
+                        print(f"No tables found in {selected_sqlite_file}.")
+                    else:
+                        print("Available tables:")
+                        for idx, table_name in enumerate(table_names):
+                            print(f"{idx + 1}. {table_name}")
+                        table_choice = int(input(f"Select a table to read (1-{len(table_names)}): "))
+                        selected_table = table_names[table_choice - 1]
+                        df = sqlite_to_dataframe(selected_sqlite_file, selected_table)
+                        print(df)
+                        # Read and display the selected table
+                        # read_sqlite_table(selected_sqlite_file, selected_table)
             else:
-                print("Available HDF5 files:")
-                for idx, h5_file in enumerate(h5_files):
-                    print(f"{idx + 1}. {h5_file}")
+                print("Invalid choice! Please enter either 1 or 2.")
+                
 
-                file_choice = int(input(f"Select a file to read (1-{len(h5_files)}): "))
-                selected_h5_file = os.path.join(h5_dir, h5_files[file_choice - 1])
-
-                # read_h5_file(selected_h5_file)
-                df = create_dataframe_and_show_structure(selected_h5_file)
-                print(df)
-                print(5*'-----------------------------------')
-        
         elif choice == '2':
             print(f"Scanning {root_dir} for new ROOT files to convert...")
             new_root_files_h5, new_root_files_sqlite = scan_for_new_root_files(root_dir, h5_dir, sqlite_dir)
 
-            if not new_root_files_h5:
-                print("No new ROOT files found for h5-conversion.")
-            # elif not new_root_files_sqlite:
-            #     print("No new ROOT files found for sqlite-conversion.")
-            else:
+            if new_root_files_h5:
                 print(f"Converting {len(new_root_files_h5)} ROOT files to HDF5 format...")
                 root2h5(new_root_files_h5, h5_dir)
                 print(f"Conversion completed. HDF5 files saved to {h5_dir}")
+
+            if new_root_files_sqlite:
+                print(f"Converting {len(new_root_files_sqlite)} ROOT files to SQLite format...")
+                for root_file in new_root_files_sqlite:
+                    convert_branches_to_sqlite(root_file, "phaseIITriggerTree;1", columns_to_find, os.path.join(sqlite_dir, os.path.basename(root_file).replace('.root', '.sqlite3')))
+                print(f"Conversion completed. SQLite files saved to {sqlite_dir}")
 
         elif choice == '3':
             print("Exiting...")
@@ -675,11 +808,7 @@ def main():
             print("Invalid option, please choose again.")
 
 if __name__ == "__main__":
-
     try:
         main()
-        # root_files_path = '/home/nikosili/projects/annie_gnn/data/root/after_phase_0.0.root'
-        # root_file = uproot.open(root_files_path)
-        # get_tree_branches(root_file,['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy'])
     except Exception as error_main:
-        print('[main error]: ',error_main)
+        print('[main error]:', error_main)
