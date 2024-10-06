@@ -231,7 +231,7 @@ def list_h5_files(h5_dir: str) -> List[str]:
     return h5_files
 
 
-def root2h5(root_files: List[str], h5_dir:str) -> None:
+def root2h5(features: List[str], root_files: List[str], h5_dir:str) -> None:
     """
     Converts a list of root files to HDF5 format and saves them in the specified directory.
     - The function converts each root file in the `root_files` list to HDF5 format.
@@ -252,10 +252,10 @@ def root2h5(root_files: List[str], h5_dir:str) -> None:
         >>> convert_new_root_files(root_files, h5_dir)
     """
     for file in root_files:
-        columns_to_find = ['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']#IMPORTANT: columns to extract from the ROOT file should be dynamic
+        # columns_to_find = ['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']#IMPORTANT: columns to extract from the ROOT file should be dynamic
         h5_file_path = os.path.join(h5_dir, os.path.basename(file).replace('.root', '.h5'))
-        array_data_dict = root_to_dict_of_arrays(file, columns_to_find)
-        awkward_array = root_to_awkward_arrays(file, columns_to_find) #NOTE: awkward array is not used 
+        array_data_dict = root_to_dict_of_arrays(file, features)
+        awkward_array = root_to_awkward_arrays(file, features) #NOTE: awkward array is not used 
         save_to_h5(array_data_dict, awkward_array, h5_file_path) 
     return None
 
