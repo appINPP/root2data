@@ -699,7 +699,7 @@ def sqlite_to_dataframe(sqlite_db_path, table_name):
     
     return df
 
-# Main function to include SQLite and HDF5 conversions
+
 def parse_arguments():
     current_directory = os.getcwd()
     parent_directory = os.path.dirname(current_directory)
@@ -721,6 +721,15 @@ def parse_arguments():
     # return args
         
     return parser.parse_args()
+
+# Main function to include SQLite and HDF5 conversions
+def main():
+    args = parse_arguments()
+
+    root_dir = args.root_dir
+    h5_dir = args.h5_dir
+    sqlite_dir = args.sqlite_dir
+    features = args.features
 
     os.makedirs(h5_dir, exist_ok=True)
     os.makedirs(sqlite_dir, exist_ok=True)
@@ -779,18 +788,23 @@ def parse_arguments():
                 
 
         elif choice == '2':
+            if '' in features: 
+                    print("No features provided! Please provide columns to find in the ROOT file, seperated by space.")
+                    print("Example: python3 transform.py --features groupID EnergyX EnergyY ")
+                    continue   # Return to the main menu
+            
             print(f"Scanning {root_dir} for new ROOT files to convert...")
             new_root_files_h5, new_root_files_sqlite = scan_for_new_root_files(root_dir, h5_dir, sqlite_dir)
 
             if new_root_files_h5:
                 print(f"Converting {len(new_root_files_h5)} ROOT files to HDF5 format...")
-                root2h5(new_root_files_h5, h5_dir)
+                root2h5(features, new_root_files_h5, h5_dir)
                 print(f"Conversion completed. HDF5 files saved to {h5_dir}")
 
             if new_root_files_sqlite:
                 print(f"Converting {len(new_root_files_sqlite)} ROOT files to SQLite format...")
                 for root_file in new_root_files_sqlite:
-                    convert_branches_to_sqlite(root_file, "phaseIITriggerTree;1", columns_to_find, os.path.join(sqlite_dir, os.path.basename(root_file).replace('.root', '.sqlite3')))
+                    convert_branches_to_sqlite(root_file, "phaseIITriggerTree;1", features, os.path.join(sqlite_dir, os.path.basename(root_file).replace('.root', '.sqlite3')))
                 print(f"Conversion completed. SQLite files saved to {sqlite_dir}")
 
         elif choice == '3':
