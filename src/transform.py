@@ -702,10 +702,10 @@ def sqlite_to_dataframe(sqlite_db_path, table_name):
 # Main function to include SQLite and HDF5 conversions
 def main():
     current_directory = os.getcwd()
-    # parent_directory = os.path.dirname(current_directory)
-    root_dir = os.path.join(current_directory, "data", "root")
-    h5_dir = os.path.join(current_directory, "data", "h5")
-    sqlite_dir = os.path.join(current_directory, "data", "sqlite")
+    parent_directory = os.path.dirname(current_directory)
+    root_dir = os.path.join(parent_directory, "data", "root")
+    h5_dir = os.path.join(parent_directory, "data", "h5")
+    sqlite_dir = os.path.join(parent_directory, "data", "sqlite")
 
     columns_to_find = ['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']
 
