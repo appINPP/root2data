@@ -166,9 +166,10 @@ def hdf5_hierarchy(h5_file_path: str) -> None:
             print(data)
 
 
-def scan_for_new_root_files(root_dir: str, h5_dir:str=None, sqlite_dir:str=None) -> List[str]:
+def scan_for_new_root_files(root_dir: str, h5_dir: str = None, sqlite_dir: str = None) -> List[str]:
     """
-    Scans the root directory for new files that have not been converted to h5 AND sqlite files.
+    Scans the root directory for new files that have not been converted to HDF5 and/or SQLite.
+    Asks the user whether to convert to HDF5, SQLite, or both, and then asks them to select files accordingly.
 
     Parameters:
      - root_dir (str): The directory containing the ROOT files.
@@ -176,28 +177,59 @@ def scan_for_new_root_files(root_dir: str, h5_dir:str=None, sqlite_dir:str=None)
      - sqlite_dir (str): The directory containing the SQLite files.
     
     Returns:
-     - new_root_files (list): A list of file paths to the new ROOT files.
-    
+     - new_root_files_h5 (list): A list of file paths to the selected ROOT files for HDF5 conversion.
+     - new_root_files_sqlite (list): A list of file paths to the selected ROOT files for SQLite conversion.
     """
     root_files = os.listdir(root_dir)
     h5_files = [x.split('.h5')[0] for x in os.listdir(h5_dir)]
     sqlite_files = [x.split('.sqlite3')[0] for x in os.listdir(sqlite_dir)]
-    # h5
-    new_root_for_h5 = [x for x in root_files if x.endswith('.root') and x.split('.root')[0] not in h5_files]
-    if not new_root_for_h5:
-        print('No new root files found for h5')
-    else:
-        print(f'New root files: {new_root_for_h5} for h5')
-    # sqlite
-    new_root_for_sqlite = [x for x in root_files if x.endswith('.root') and x.split('.root')[0] not in sqlite_files]
-    if not new_root_for_sqlite:
-        print('No new root files found for sqlite')
-    else:
-        print(f'New root files: {new_root_for_sqlite} for sqlite')
 
-    # Go one directory up and then search for data/root
-    new_root_files_h5 = [os.path.join(os.path.dirname(os.getcwd()), 'data', 'root', x) for x in new_root_for_h5]
-    new_root_files_sqlite = [os.path.join(os.path.dirname(os.getcwd()), 'data', 'root', x) for x in new_root_for_sqlite]
+    # Filter new files for HDF5 and SQLite
+    new_root_for_h5 = [x for x in root_files if x.endswith('.root') and x.split('.root')[0] not in h5_files]
+    new_root_for_sqlite = [x for x in root_files if x.endswith('.root') and x.split('.root')[0] not in sqlite_files]
+
+    new_root_files_h5, new_root_files_sqlite = [], []
+
+    # Ask the user if they want to convert to HDF5, SQLite, or both
+    print("\nDo you want to convert to:")
+    print("1. HDF5")
+    print("2. SQLite")
+    print("3. Both")
+    conversion_choice = input("Enter your choice (1/2/3): ").strip()
+
+    if conversion_choice == '1':  # Convert to HDF5
+        if not new_root_for_h5:
+            print('No new root files found for HDF5.')
+        else:
+            print(f'New root files for HDF5: {new_root_for_h5}')
+            new_root_files_h5 = user_file_selection(new_root_for_h5)
+
+    elif conversion_choice == '2':  # Convert to SQLite
+        if not new_root_for_sqlite:
+            print('No new root files found for SQLite.')
+        else:
+            print(f'New root files for SQLite: {new_root_for_sqlite}')
+            new_root_files_sqlite = user_file_selection(new_root_for_sqlite)
+
+    elif conversion_choice == '3':  # Convert to both HDF5 and SQLite
+        if not new_root_for_h5:
+            print('No new root files found for HDF5.')
+        else:
+            print(f'New root files for HDF5: {new_root_for_h5}')
+            new_root_files_h5 = user_file_selection(new_root_for_h5)
+
+        if not new_root_for_sqlite:
+            print('No new root files found for SQLite.')
+        else:
+            print(f'New root files for SQLite: {new_root_for_sqlite}')
+            new_root_files_sqlite = user_file_selection(new_root_for_sqlite)
+
+    else:
+        print("Invalid option. No files will be converted.")
+
+    # Generate full paths for the selected files
+    new_root_files_h5 = [os.path.join(root_dir, x) for x in new_root_files_h5]
+    new_root_files_sqlite = [os.path.join(root_dir, x) for x in new_root_files_sqlite]
 
     return new_root_files_h5, new_root_files_sqlite
 
@@ -544,15 +576,46 @@ def traverse_hdf5(h5_file_path: str) -> Dict:
     return info
 
 
+def user_file_selection(files_list):
+    """
+    Displays the available files and lets the user choose specific ones.
+    
+    Parameters:
+    - files_list (list): A list of available files.
+
+    Returns:
+    - selected_files (list): A list of selected files based on user input.
+    """
+    print("\nThe following new ROOT files were found:")
+    for idx, file in enumerate(files_list):
+        print(f"{idx + 1}. {file}")
+
+    # Ask if the user wants to convert all files or select specific ones
+    choice = input("\nDo you want to convert all files? (y/n): ").strip().lower()
+
+    if choice == 'y':
+        return files_list  # Convert all files
+    else:
+        # Let the user choose specific files by index
+        selected_files = []
+        print("\nEnter the numbers of the files you want to convert, separated by commas:")
+        selection = input().split(",")
+        for idx in selection:
+            try:
+                selected_files.append(files_list[int(idx) - 1])
+            except (ValueError, IndexError):
+                print(f"Invalid input: {idx}. Skipping this file.")
+
+        return selected_files
+    
+
 def main():
     current_directory = os.getcwd()
 
     # Construct the paths
-    
-    parent_directory = os.path.dirname(current_directory)
-    root_dir = os.path.join(parent_directory, "data", "root")  # Directory containing ROOT files
-    h5_dir = os.path.join(parent_directory, "data", "h5") 
-    sqlite_dir = os.path.join(parent_directory, "data", "sqlite") 
+    root_dir = os.path.join(current_directory, "data", "root")  # Directory containing ROOT files
+    h5_dir = os.path.join(current_directory, "data", "h5") 
+    sqlite_dir = os.path.join(current_directory, "data", "sqlite") 
 
     columns_to_find =['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']
 
@@ -597,8 +660,8 @@ def main():
 
             if not new_root_files_h5:
                 print("No new ROOT files found for h5-conversion.")
-            elif not new_root_files_sqlite:
-                print("No new ROOT files found for sqlite-conversion.")
+            # elif not new_root_files_sqlite:
+            #     print("No new ROOT files found for sqlite-conversion.")
             else:
                 print(f"Converting {len(new_root_files_h5)} ROOT files to HDF5 format...")
                 root2h5(new_root_files_h5, h5_dir)
