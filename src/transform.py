@@ -700,14 +700,27 @@ def sqlite_to_dataframe(sqlite_db_path, table_name):
     return df
 
 # Main function to include SQLite and HDF5 conversions
-def main():
+def parse_arguments():
     current_directory = os.getcwd()
     parent_directory = os.path.dirname(current_directory)
-    root_dir = os.path.join(parent_directory, "data", "root")
-    h5_dir = os.path.join(parent_directory, "data", "h5")
-    sqlite_dir = os.path.join(parent_directory, "data", "sqlite")
+    default_root_dir = os.path.join(parent_directory, "data", "root")
+    default_h5_dir = os.path.join(parent_directory, "data", "h5")
+    default_sqlite_dir = os.path.join(parent_directory, "data", "sqlite")
 
-    columns_to_find = ['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']
+    parser = argparse.ArgumentParser(description="Process ROOT files and save data to HDF5/SQLite format.")
+    parser.add_argument('--features', nargs='+', default=' ', help='List of columns to find in the ROOT file.')
+    # parser.add_argument('--features', type=str, help='Comma-separated list of columns to find in the ROOT file.')
+    parser.add_argument('--root_dir', default=default_root_dir, help='Path to the ROOT file directory.')
+    parser.add_argument('--h5_dir', default=default_h5_dir, help='Path to the HDF5 file directory.')
+    parser.add_argument('--sqlite_dir', default=default_sqlite_dir, help='Path to the SQLite file directory.')
+
+    # If we want comma-separated features into a list then uncomment the following lines
+    # args = parser.parse_args()
+    # if args.features:
+    #     args.features = args.features.split(',')
+    # return args
+        
+    return parser.parse_args()
 
     os.makedirs(h5_dir, exist_ok=True)
     os.makedirs(sqlite_dir, exist_ok=True)
