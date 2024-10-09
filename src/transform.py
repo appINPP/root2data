@@ -615,7 +615,21 @@ def convert_branches_to_sqlite(root_file_path, tree_name, branch_names, sqlite_d
                 try:
                     branch_data = branch_data.astype(np.float64)
                 except ValueError:
-                    branch_data = np.array([str(item) for item in branch_data], dtype='S')
+                    """
+                    The following line is needed, because otherwise large arrays appear truncated, i.e.: [0, 1, 2, ...., n-1, n]
+                    Therefore, the arrays when converted to byte strings, are stored truncated and the conversion is not successful.
+
+                    WARNING: Currently it is commented out, because a large amount of memory is needed for the conversion to be completed successfully. 
+                    As a result, for the large ROOT files that are created from the KM3NeT PreAnalysis, the code crashes and it is never executed. 
+                    Most probably, it has to be run in a cluster, like in Lyon.
+                    """
+                    #np.set_printoptions(threshold = np.inf)
+                    """
+                    For each item, we have to specifically state that it is of 'float' type.
+                    Otherwise, boolean values are not passed as 0 or 1, but as True and False. 
+                    """
+                    branch_data = np.array([str(item.astype(float)) for item in branch_data], dtype='S')
+                    #branch_data = np.array([str(item) for item in branch_data], dtype='S')
 
             data.append(branch_data)
 
