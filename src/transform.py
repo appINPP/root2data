@@ -662,10 +662,14 @@ def read_sqlite_table(sqlite_db_path, table_name):
     print("\n")
     conn.close()
     
+#This function retrieves the names of all tables present in an SQLite database. In our case usually it is just one table   
 def get_table_names(sqlite_db_path):
     conn = sqlite3.connect(sqlite_db_path)
+    #cursor to allow SQL commands to be executed
     cursor = conn.cursor()
+    #run a Query to get all the tables
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    #return the tables to the "tables" variable and return all the table names(the name is in the 0 position)
     tables = cursor.fetchall()
     conn.close()
     return [table[0] for table in tables]
