@@ -601,39 +601,44 @@ def convert_branches_to_sqlite(root_file_path, tree_name, branch_names, sqlite_d
         columns = ", ".join([f'"{branch_name}" REAL' for branch_name in branch_names])
         cursor.execute(f"CREATE TABLE IF NOT EXISTS {sanitized_table_name} ({columns})")
 
-        data = []
+        # Initialize an empty list to store the branch data.
+        data = []  
+
+        # Iterate over all the branch names in the list 'branch_names'.
         for branch_name in branch_names:
+            # Check if the current branch name exists in the tree's keys.
             if branch_name not in tree.keys():
                 print(f"Branch '{branch_name}' not found in the tree '{tree_name}'")
-                continue
+                continue  # Skip to the next branch if the current one is not found.
 
+            # Extract the branch data as a NumPy array
             branch_data = tree[branch_name].array(library="np")
 
+            # Check if the data type of the branch is byte strings.
             if branch_data.dtype.type is np.bytes_:
+                # Convert byte strings to regular strings (UTF-8 decoding).
                 branch_data = np.char.decode(branch_data, 'utf-8')
+            
+            # Check if the branch data type is 'object', which may indicate mixed types or non-numeric data.
             elif branch_data.dtype == np.dtype('O'):
                 try:
+                    # Attempt to convert the branch data to 'float64' type (standard numeric type).
                     branch_data = branch_data.astype(np.float64)
                 except ValueError:
-                    """
-                    The following line is needed, because otherwise large arrays appear truncated, i.e.: [0, 1, 2, ...., n-1, n]
-                    Therefore, the arrays when converted to byte strings, are stored truncated and the conversion is not successful.
+                    # Handle the case where some values are not convertible to float64.
+                    # np.set_printoptions(threshold=np.inf)
 
-                    WARNING: Currently it is commented out, because a large amount of memory is needed for the conversion to be completed successfully. 
-                    As a result, for the large ROOT files that are created from the KM3NeT PreAnalysis, the code crashes and it is never executed. 
-                    Most probably, it has to be run in a cluster, like in Lyon.
-                    """
-                    #np.set_printoptions(threshold = np.inf)
-                    """
-                    For each item, we have to specifically state that it is of 'float' type.
-                    Otherwise, boolean values are not passed as 0 or 1, but as True and False. 
-                    """
+                    # Convert each item in the branch data to a string after converting to float.
+                    # This ensures all data is treated as floats, including boolean values.
+                    # Boolean values should be converted to 0 or 1 rather than 'True' or 'False'.
                     branch_data = np.array([str(item.astype(float)) for item in branch_data], dtype='S')
-                    #branch_data = np.array([str(item) for item in branch_data], dtype='S')
 
+            # Append the processed branch data to the 'data' list.
             data.append(branch_data)
 
+        # Combine the list of branch data into a 2D NumPy array where each branch becomes a column.
         data = np.column_stack(data)
+
 
         placeholders = ", ".join(["?"] * len(branch_names))
         cursor.executemany(f"INSERT INTO {sanitized_table_name} VALUES ({placeholders})", data)
