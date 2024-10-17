@@ -374,8 +374,11 @@ def root_to_awkward_arrays(root_files_path: str, columns_to_find: List[str]) -> 
 # Only convert to float if not possible skip the entry!
 def save_to_h5(arrays: Dict[str, np.ndarray], awkward_arrays, h5_file_path: str) -> None:
     '''
-    The code converts arrays (including byte strings) into lists of NumPy arrays of float64.
+    The code converts an array of byte strings into a list of NumPy arrays of float64.
     It handles variable-length sequences by using h5py.special_dtype(vlen=np.dtype('float64')).
+
+    * A special dtype dt is created for variable-length sequences of float64 using h5py.special_dtype.
+    * The list_of_arrays is converted to a NumPy array with the special dtype dt.
     '''
     with h5py.File(h5_file_path, 'w') as h5_file:
         group_name = os.path.basename(h5_file_path).split('.h5')[0]
@@ -384,31 +387,21 @@ def save_to_h5(arrays: Dict[str, np.ndarray], awkward_arrays, h5_file_path: str)
             # If the array is of object dtype (contains mixed data types)
             if array.dtype == 'O':
                 try:
-                    # Try to convert all items to float64
                     array = np.array([np.array(item, dtype=np.float64) for item in array])
                 except ValueError:
                     list_of_arrays = []
-                    print(f'Cannot convert {key} to float64. Converting to byte strings and storing as variable-length sequences.')
-                    np.set_printoptions(threshold=np.inf)
-                    
-                    # Attempt to convert each item to float
-                    for item in array:
-                        try:
-                            # Try converting the item to float
-                            float_item = np.array(item, dtype=np.float64)
-                            list_of_arrays.append(float_item)
-                        except (ValueError, TypeError):
-                            # Skip items that cannot be converted to float
-                            print(f'Warning: Skipping non-float convertible item in {key}')
-                    
+                    print(f'Can not convert {key} to float64. Converting to byte strings and storing as variable-length sequence')
+                    np.set_printoptions(threshold=np.inf) #NOTE: possible solution error for larger datasets
+                    array_with_byte_data = np.array([str(item.astype(float)) for item in array], dtype='S') #NOTE: item.astype(float) useful when item is boolean
+                    for item in array_with_byte_data:
+                        if len(str(item)) > 1:                            
+                            list_of_arrays.append(byte_preprocessing(item)) #COMMENT: convert byte string data to list of arrays
                     # Create a special dtype for variable-length float sequences
                     dt = h5py.special_dtype(vlen=np.dtype('float64'))
                     array = np.array(list_of_arrays, dtype=dt)
-            
             else:
                 # If array is already a numeric type, ensure it is saved in the original dtype
-                array = array.astype(array.dtype)
-                
+                array = array.astype(array.dtype) #COMMENT: convert array to its original dtype
             # Save the dataset in the HDF5 group
             group.create_dataset(key, data=array)
     
@@ -418,7 +411,7 @@ def save_to_h5(arrays: Dict[str, np.ndarray], awkward_arrays, h5_file_path: str)
 
 
 
-def preprocessing(item: str) -> np.ndarray:
+def byte_preprocessing(item: str) -> np.ndarray:
     """
     Preprocesses the data in the byte string format and converts it to a NumPy array of float64.
 
@@ -637,6 +630,19 @@ def convert_branches_to_sqlite(root_file_path, tree_name, branch_names, sqlite_d
                     # Attempt to convert the branch data to 'float64' type (standard numeric type).
                     branch_data = branch_data.astype(np.float64)
                 except ValueError:
+                    """
+                    The following line is needed, because otherwise large arrays appear truncated, i.e.: [0, 1, 2, ...., n-1, n]
+                    Therefore, the arrays when converted to byte strings, are stored truncated and the conversion is not successful.
+
+                    WARNING: Currently it is commented out, because a large amount of memory is needed for the conversion to be completed successfully. 
+                    As a result, for the large ROOT files that are created from the KM3NeT PreAnalysis, the code crashes and it is never executed. 
+                    Most probably, it has to be run in a cluster, like in Lyon.
+                    """
+                    #np.set_printoptions(threshold = np.inf)
+                    """
+                    For each item, we have to specifically state that it is of 'float' type.
+                    Otherwise, boolean values are not passed as 0 or 1, but as True and False. 
+                    """
                     # Handle the case where some values are not convertible to float64.
                     # np.set_printoptions(threshold=np.inf)
 
@@ -730,8 +736,6 @@ def sqlite_to_dataframe(sqlite_db_path, table_name):
                 df[column] = df[column].apply(lambda x: np.fromstring(x.strip('[]'), sep=' ') if '[' in x else x)
             except Exception as e:
                 print(f"Error converting column '{column}': {e}")
-
-    
     return df
 
 
