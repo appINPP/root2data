@@ -38,7 +38,7 @@ def user_file_selection(files_list):
 def scan_for_new_root_files(root_dir: str, h5_dir: str = None, sqlite_dir: str = None) -> List[str]:
     root_files = os.listdir(root_dir)
     h5_files = [x.split('.h5')[0] for x in os.listdir(h5_dir)]
-    sqlite_files = [x.split('.sqlite3')[0] for x in os.listdir(sqlite_dir)]
+    sqlite_files = [x.split('.db')[0] for x in os.listdir(sqlite_dir)]
 
     new_root_for_h5 = [x for x in root_files if x.endswith('.root') and x.split('.root')[0] not in h5_files]
     new_root_for_sqlite = [x for x in root_files if x.endswith('.root') and x.split('.root')[0] not in sqlite_files]
