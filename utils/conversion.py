@@ -10,6 +10,7 @@ import sqlite3
 from .data_ops import root_to_dict_of_arrays, root_to_awkward_arrays
 from .sqlite_ops import save_to_sqlite
 from .hdf5_ops import save_to_h5
+from .parquet_ops import save_to_parquet
 
 
 def root2h5(features: List[str], root_files: List[str], h5_dir:str) -> None:
@@ -21,8 +22,8 @@ def root2h5(features: List[str], root_files: List[str], h5_dir:str) -> None:
     - The converted arrays are then saved to HDF5 files using the `save_to_h5()` function.
 
     Parameters:
-     - root_files (List[str]): A list of root file paths to be converted.
-     - h5_dir (str): The directory where the converted HDF5 files will be saved.
+        - root_files (List[str]): A list of root file paths to be converted.
+        - h5_dir (str): The directory where the converted HDF5 files will be saved.
 
     Returns:
         None
@@ -124,3 +125,14 @@ def root2sqlite(features: List[str], root_files: List[str], sqlite_dir:str):
         # save_to_h5(array_data_dict, sqlite_file_path) 
     return None
     pass
+
+
+def root2parquet(features: List[str], root_files: List[str], parquet_dir:str):
+    for file_ in root_files:
+        # features = ['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']#IMPORTANT: columns to extract from the ROOT file should be dynamic
+        sqlite_file_path = os.path.join(parquet_dir, os.path.basename(file_).replace('.root', '.parquet'))
+        array_data_dict = root_to_dict_of_arrays(file_, features)
+        # awkward_array = root_to_awkward_arrays(file_, features) #NOTE: awkward array is not used 
+        save_to_parquet(array_data_dict, sqlite_file_path)
+        # save_to_h5(array_data_dict, sqlite_file_path) 
+    return None

@@ -35,6 +35,23 @@ def list_sqlite_files(sqlite_dir: str) -> List[str]:
     
     Example:
     >>> list_sqlite_files("data/sqlite")
-    ['db1.sqlite3', 'db2.sqlite3']
+    ['sqlitedile_1.db', 'sqlitedile_2.db']
     """
-    return [file for file in os.listdir(sqlite_dir) if file.endswith(".sqlite3")]
+    return [file for file in os.listdir(sqlite_dir) if file.endswith(".db")]
+
+def list_parquet_files(parquet_dir: str) -> List[str]:
+    """
+    Lists all Parquet files in the given directory.
+
+    Parameters:
+     - parquet_dir (str): Directory to search for Parquet files.
+
+    Returns:
+     - List[str]: List of Parquet file paths.
+    
+    Example:
+    >>> list_parquet_files("data/parquet")
+    ['file_1.parquet', 'file_2.parquet']
+    """
+    parquet_files = [f for f in os.listdir(parquet_dir) if f.endswith('.parquet')]
+    return parquet_files

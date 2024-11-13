@@ -4,7 +4,7 @@
 import sqlite3
 import pandas as pd
 import numpy as np
-from typing import Dict
+from typing import Dict, Any, Union
 import os
 import json
 from data_ops import byte_preprocessing
@@ -69,8 +69,8 @@ def save_to_sqlite(arrays: Dict[str, np.ndarray], sqlite_db_path: str) -> None:
     sanitized_table_name = f'"{table_name.replace(".", "_")}"'
     columns = []
     for key, array in arrays.items():
-        if array.dtype == object:
-            columns.append(f'"{key}" BLOB')
+        if array.dtype == "O":
+            columns.append(f'"{key}" TEXT')
         else:
             columns.append(f'"{key}" REAL')
     # cursor.execute(f"CREATE TABLE {sanitized_table_name} ({', '.join(arrays.keys())})")
@@ -79,7 +79,7 @@ def save_to_sqlite(arrays: Dict[str, np.ndarray], sqlite_db_path: str) -> None:
     for key, array in arrays.items():
         if array.dtype == object:
             try:
-                array = np.array([np.array(item, dtype=np.float64) for item in array])
+                array = np.array([np.array(item, dtype=np.float64) for item in array]) # [item_.astype('float32') for item_ in array.tolist()][0]
             except ValueError:
                 list_of_arrays = []
                 print(f'Can not convert {key} to float64. Converting to byte strings and storing as variable-length sequence')
