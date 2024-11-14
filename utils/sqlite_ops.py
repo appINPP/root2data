@@ -7,7 +7,7 @@ import numpy as np
 from typing import Dict, Any, Union
 import os
 import json
-from data_ops import byte_preprocessing
+from .data_ops import byte_preprocessing
 
 def get_table_names(sqlite_db_path):
     conn = sqlite3.connect(sqlite_db_path)
