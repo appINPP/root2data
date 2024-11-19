@@ -109,13 +109,13 @@ python3 main.py --features eventNumber digitX digitY digitZ
 ## Time testing
 
 ### 1 random ROOT files
-![Screenshot](./backup/onefile.png)
+![Screenshot](./images/onefile.png)
 
 ### 10 ROOT files
-![Screenshot](./backup/10file.png)
+![Screenshot](./images/10file.png)
 
 ### 1 big ROOT file
-![Screenshot](./backup/bigfile.png)
+![Screenshot](./images/bigfile.png)
 
 ## License
 
