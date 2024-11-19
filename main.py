@@ -1,3 +1,17 @@
+#    Copyright 2024 appINPP
+
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+
+#        http://www.apache.org/licenses/LICENSE-2.0
+
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+# 
 import os
 import argparse
 from utils.file_ops import list_h5_files, list_sqlite_files
@@ -7,8 +21,6 @@ from utils.sqlite_ops import get_table_names, sqlite_to_dataframe, read_sqlite_t
 from utils.parquet_ops import parquet_to_dataframe
 from utils.file_ops import list_h5_files, list_sqlite_files, list_parquet_files
 from utils.ui_ops import user_file_selection, scan_for_new_root_files
-# import numpy as np
-# import pandas as pd
 
 
 
