@@ -1,5 +1,18 @@
+#    Copyright 2024 appINPP
+
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+
+#        http://www.apache.org/licenses/LICENSE-2.0
+
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
 # Purpose: Handles the processing & extraction of data from ROOT files, converting them into dictionaries of arrays or awkward arrays.
-# Key Functions: byte_preprocessing,get_tree_branches, root_to_dict_of_arrays, root_to_awkward_arrays.
 
 from typing import List, Dict
 import uproot
@@ -31,11 +44,11 @@ def get_tree_branches(root_file, columns_to_find) -> Dict[str, List[str]]:
     and returns a dictionary mapping tree names to the list of these columns.
 
     Parameters:
-     - root_file (str): The file path to the ROOT file.
-     - cols_to_find (List[str]): A list of columns to extract from the ROOT file.
+        - root_file (str): The file path to the ROOT file.
+        - cols_to_find (List[str]): A list of columns to extract from the ROOT file.
 
     Returns:
-     - tree_dict (Dict): A dictionary where the keys are tree names and the values are lists of columns found in those trees.
+    - tree_dict (Dict): A dictionary where the keys are tree names and the values are lists of columns found in those trees.
     
     Notes:
     - A modification is used because the trees created in the PreAnalysis script are <ins>**larger**</ins> than the buffer size
@@ -58,7 +71,7 @@ def get_tree_branches(root_file, columns_to_find) -> Dict[str, List[str]]:
             print(f"Found columns: {tree_list} in tree: {tree_name} for file: {os.path.basename(root_file.file_path)}")
         else:
             print(f"Columns not found in tree: {tree_name}")
-         # add tree basename to the set, after we have extracted the branches
+        # add tree basename to the set, after we have extracted the branches
         tree_basenames.add(tree_name)
     return tree_dict
 
@@ -68,11 +81,11 @@ def root_to_dict_of_arrays(root_files_path: str, columns_to_find: List[str]) -> 
     Extract data from a ROOT file and return them as a dictionary of NumPy ndarrays.
 
     Parameters:
-     - root_files_path (str): The path to the ROOT file from which data is to be extracted.
-     - columns_to_find (List[str]): A list of column names to be extracted from the ROOT file.
+        - root_files_path (str): The path to the ROOT file from which data is to be extracted.
+        - columns_to_find (List[str]): A list of column names to be extracted from the ROOT file.
 
     Returns:
-     - dict_of_arrays (Dict[str, np.ndarray]): A dictionary where keys are the column names and values are NumPy arrays containing data.
+    - dict_of_arrays (Dict[str, np.ndarray]): A dictionary where keys are the column names and values are NumPy arrays containing data.
 
     Examples:
     >>> root_files_path = "data/annie_data.root"
@@ -81,23 +94,23 @@ def root_to_dict_of_arrays(root_files_path: str, columns_to_find: List[str]) -> 
     >>> print(dict_of_arrays)
     {'eventNumber': array([    44,     72,     84, ..., 390861, 391175, 391191], dtype=int32),
     'digitX': array([array([ -15.23916721,  -47.80203247,  -67.9304657 ,  -68.50760651,
-                15.04926872, -112.59906006,  -98.98416901,  -98.98416901,
-               -93.81991577,  -59.74597549,  -58.7647934 ,  -27.30049896,
-               -59.25538254,  -27.30049896,   27.20409203, -105.66539001,
-              -105.66539001,  -93.81991577,  -27.06107521,  -54.94448471,
-              ..... ..... ...... ),
+                    15.04926872, -112.59906006,  -98.98416901,  -98.98416901,
+                    -93.81991577,  -59.74597549,  -58.7647934 ,  -27.30049896,
+                    -59.25538254,  -27.30049896,   27.20409203, -105.66539001,
+                    -105.66539001,  -93.81991577,  -27.06107521,  -54.94448471,
+                    ..... ..... ...... ),
     'digitY': array([array([149.68470648, 150.18379095, 150.25854376, 149.82546881,
-              149.82546881,  60.22801474,  60.22801474, -26.48331949,
-               15.47083214, -71.6477215 , -26.75432321,  60.20386007,
-               60.20386007, -26.4035618 ,  60.2419956 , 100.74185827,
-               15.47083214, 100.74185827,  15.43998197, 100.59675482,
-              100.71101263,  15.48869291,  15.43998197]),
-              ....... ....... .......),
+                    149.82546881,  60.22801474,  60.22801474, -26.48331949,
+                    15.47083214, -71.6477215 , -26.75432321,  60.20386007,
+                    60.20386007, -26.4035618 ,  60.2419956 , 100.74185827,
+                    15.47083214, 100.74185827,  15.43998197, 100.59675482,
+                    100.71101263,  15.48869291,  15.43998197]),
+                    ....... ....... .......),
     'digitT': array([array([ 7.11189461,  7.33561611,  7.88873792, 15.27171946,  9.84215736,
-               5.76198912,  5.88614655,  6.79743958,  5.8970437 ,  9.83736324,
-               7.01077414,  6.06781387,  5.08803034,  7.9968996 ,  7.1203146 ,
-               6.65937638,  6.39350533,  6.07382917,  6.04535913,  5.72223711,
-               6.41045713,  6.88058758,  5.54067039]), dtype=object)}
+                    5.76198912,  5.88614655,  6.79743958,  5.8970437 ,  9.83736324,
+                    7.01077414,  6.06781387,  5.08803034,  7.9968996 ,  7.1203146 ,
+                    6.65937638,  6.39350533,  6.07382917,  6.04535913,  5.72223711,
+                    6.41045713,  6.88058758,  5.54067039]), dtype=object)}
     """
     root_file = uproot.open(root_files_path)
     tree_and_branches = get_tree_branches(root_file, columns_to_find)
@@ -113,11 +126,11 @@ def root_to_awkward_arrays(root_files_path: str, columns_to_find: List[str]) -> 
     Extract data from a ROOT file and return it as an Awkward Array.
 
     Parameters:
-     - root_files_path (str): The path to the ROOT file from which data is to be extracted.
-     - columns_to_find (List[str]): A list of column names to be extracted from the ROOT file.
+        - root_files_path (str): The path to the ROOT file from which data is to be extracted.
+        - columns_to_find (List[str]): A list of column names to be extracted from the ROOT file.
 
     Returns:
-     - awkward_data (ak.Array): An Awkward Array containing the extracted data.
+    - awkward_data (ak.Array): An Awkward Array containing the extracted data.
 
     Examples:
     >>> root_files_path = "data/annie_data.root"
