@@ -122,9 +122,3 @@ def read_sqlite_to_df(sqlite_db_path, table_name):
     
     return df
 
-if __name__ == "__main__":
-    df = read_sqlite_to_df('/home/nikosili/projects/annie_gnn/data/sqlite/after_phase_0.0.db', 'after_phase_0_0')
-    print(df)
-    print(type(df['digitX'].iloc[0]))
-    print(df.dtypes)
-    print(type(df['digitX'].iloc[0][0]))
