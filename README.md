@@ -1,21 +1,45 @@
 <img width="256" alt="ROOT2Data_1" src="https://github.com/user-attachments/assets/5a104cd6-f1b6-4096-adde-716d1459ffcf"> 
 
-# Convert .root files to other data formats
-
-# ROOT to HDF5 Converter
+# Convert .root files to other data formats 
+#### *from ROOT..  to HDF5/ SQLite/ Parquet*  💻 ⚙️
 
 ## Abstract
 
 This repository provides a Python toolset for converting ROOT files to another format. 
-It includes functionalities for reading data from ROOT files, saving them as HDF5 files, and optionally storing the data in SQLite databases. 
-Additionally, it offers tools to explore the structure of HDF5 files as a dataframe.
+It includes functionalities for reading data from ROOT files and saving them as other file formats.
+Additionally, we can explore the file structure & print a dataframe. 
 
-**Prerequisites**
+**<ins>The scope of this work, was to create a general tool for converting ROOT files to other formats.</ins>**
+
+## Project structure:
 
 ```
-pip install -r requirements.txt
-```
+root2data/
+│
+├── .gitignore
+├── LICENCSE
+├── README.md
+├── create_env.sh
+├── main.py
+├── requirements.txt
+├── data/ # this folder is created if not present
+│   ├── h5/
+│   ├── parquet/
+│   ├── root/
+│   └── sqlite/
+├── utils/
+│   ├── __init__.py 
+│   ├── conversion.py
+│   ├── data_ops.py
+│   ├── file_ops.py
+│   ├── hdf5_ops.py
+│   ├── parquet_ops.py
+│   ├── sqlite_ops.py
+│   └── ui_ops.py
+└── src/
+    └── transform.py
 
+```
 ## Usage
 
 1) Directory Structure: Ensure you have the following directories set up in your working directory:
@@ -27,38 +51,71 @@ pip install -r requirements.txt
     - Convert ROOT files to HDF5 format.
     - Exit the program.
 
-## Functions:
+## Prerequisites
 
-- create_dataframe_and_show_structure : Creates a dataframe of the root file so that it is easy to view and perform data analysis tasks.
-- read_h5_file : Reads and prints the content of a HDF5 file
-- root2h5 : Converts root -> HDF5, with arguments:
-    - the path to the root file.
-    - List of column names to extract.
-    - the path to save the h5 file.
-- scan_for_new_root_files : Searches a given directory for root files that can be converted.
-- list_h5_files : Display all h5 files so that the user can pick one to view.
+The following will create a python virual environment at the same time activate it:
+
+```
+source create_env.sh
+```
+
+Then execute the following to install required packages:
+```
+pip install -r requirements.txt
+```
+You have now created a virtual env called *root2data*
 
 ## Walkthrough
 
-### Clone the repository
+1. Clone the repository.
+```
+git clone https://github.com/appINPP/root2data.git
+```
 ![Screenshot from 2024-10-03 12-44-40](https://github.com/user-attachments/assets/985c0d09-75a7-4035-9125-296ebd91a448)
-### Go to the executable python code at root2data/src
-![Screenshot from 2024-10-03 12-45-44](https://github.com/user-attachments/assets/7c8ed717-6cb3-4205-acb6-ec2934f9247a)
-### You are prompted to select an action (here, I select 2)
-![Screenshot from 2024-10-03 12-46-14](https://github.com/user-attachments/assets/ca964fe4-158c-4eb5-af62-093a4f6e8a66)
-### Add root files to the root2data/data/root directory
-![Screenshot from 2024-10-03 12-51-56](https://github.com/user-attachments/assets/8d16d686-bba9-4cdd-a266-da5c3d5812ac)
-### Your files are now converted to HDF5 format
-![Screenshot from 2024-10-03 12-52-56](https://github.com/user-attachments/assets/22cf6911-0bc2-45ae-8b28-b28524348221)
-### To change the features you want to extract from the root file to the h5 go to line 203 and add them to the array
-![Screenshot from 2024-10-03 12-54-31](https://github.com/user-attachments/assets/d15c771e-27ed-46b9-a9d7-01472b88b8ac)
-### After conversion you can now read the h5 file that you created by choosing (1)
-![Screenshot from 2024-10-03 12-55-26](https://github.com/user-attachments/assets/d5a3097b-0a68-429c-9de0-24b63249bbc8)
-### The HDF5 file is shown as a dataframe
-![Screenshot from 2024-10-03 12-56-09](https://github.com/user-attachments/assets/2bb7dba9-176f-4fbb-8413-a5d5a31a637f)
+
+2. #### Create the virtual environment, as discusssed above in the prerequisites section.
+
+3. #### Execute the main.py and select the desired features (**seperate them with space**).
+```
+python3 main.py --features eventNumber digitX digitY digitZ
+```
+
+4. #### You are prompted to select an action (here, we select 2).
+   
+   ![alt text](/images/root2data1.png)
+
+5. #### In this section, we can determine the format of the output file (here, we select 1).
+   
+   ![alt text](/images/root2data2.png)
+   
+6. #### You can choose to convert all detected root files or choose specific files (here, we select 3,4).
+   
+   ![alt text](/images/root2data3.png)
+
+7.  #### The conversion pipeline is initiated and the files are converted. Our process indicates if the declared features are found and in which root file tree.
+   
+   ![alt text](/images/root2data4.png)
+
+8.  #### After conversion you are ready read the h5 files that you created by.
+   
+  ![alt text](/images/root2data5.png)
+  
+9. #### For the h5 file, you can also read the data structure and print it as a dataframe.
+   
+  ![alt text](/images/root2data6.png)
+  
 
 
+## Time testing
 
+### 1 random ROOT files
+![Screenshot](./backup/onefile.png)
+
+### 10 ROOT files
+![Screenshot](./backup/10file.png)
+
+### 1 big ROOT file
+![Screenshot](./backup/bigfile.png)
 
 ## License
 
