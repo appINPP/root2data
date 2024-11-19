@@ -1,5 +1,19 @@
+#    Copyright 2024 appINPP
+
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+
+#        http://www.apache.org/licenses/LICENSE-2.0
+
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
 # Purpose: Facilitates user interaction for file selection and other input-related tasks.
-# Key Functions: user_file_selection.
+
 import os
 from typing import List, Tuple
 
@@ -9,10 +23,10 @@ def user_file_selection(files_list):
     Displays the available files and lets the user choose specific ones.
     
     Parameters:
-    - files_list (list): A list of available files.
+        - files_list (list): A list of available files.
 
     Returns:
-    - selected_files (list): A list of selected files based on user input.
+        - selected_files (list): A list of selected files based on user input.
     """
     print("\nThe following new ROOT files were found:")
     for idx, file in enumerate(files_list):
@@ -36,6 +50,21 @@ def user_file_selection(files_list):
     
 
 def scan_for_new_root_files(root_dir: str, h5_dir: str = None, sqlite_dir: str = None, parquet_dir:str = None) -> List[str]:
+    '''
+    Scans the specified root directory for new .root files that do not have corresponding files in the specified HDF5, SQLite, or Parquet directories.
+    
+    Parameters:
+        - root_dir (str): The directory containing the .root files.
+        - h5_dir (str, optional): The directory containing the .h5 files. Defaults to None.
+        - sqlite_dir (str, optional): The directory containing the .db files. Defaults to None.
+        - parquet_dir (str, optional): The directory containing the .parquet files. Defaults to None.
+    
+    Returns:
+        - List[str]: A tuple containing three lists:
+        - List of new .root files to be converted to HDF5.
+        - List of new .root files to be converted to SQLite.
+        - List of new .root files to be converted to Parquet.
+    '''
     root_files = os.listdir(root_dir)
     h5_files = [x.split('.h5')[0] for x in os.listdir(h5_dir)]
     sqlite_files = [x.split('.db')[0] for x in os.listdir(sqlite_dir)]
@@ -50,6 +79,7 @@ def scan_for_new_root_files(root_dir: str, h5_dir: str = None, sqlite_dir: str =
     print("\nDo you want to convert to:")
     print("1. HDF5")
     print("2. SQLite")
+    # print("3. Both")
     print("3. Parquet")
     conversion_choice = input("Enter your choice (1/2/3): ").strip()
     # conversion_choice = '2' #ATTENTION: only for testing, DELETE this line when in production!
@@ -66,15 +96,19 @@ def scan_for_new_root_files(root_dir: str, h5_dir: str = None, sqlite_dir: str =
         else:
             new_root_files_sqlite = user_file_selection(new_root_for_sqlite)
 
-    elif conversion_choice == '3':  # Convert to both HDF5 and SQLite
-        if not new_root_for_h5:
-            print('No new root files found for HDF5.')
-        else:
-            new_root_files_h5 = user_file_selection(new_root_for_h5)
+    # elif conversion_choice == '3':  # Convert to both HDF5 and SQLite
+    #     if not new_root_for_h5:
+    #         print('No new root files found for HDF5.')
+    #     else:
+    #         new_root_files_h5 = user_file_selection(new_root_for_h5)
+
+    #     if not new_root_for_sqlite:
+            # print('No new root files found for SQLite.')
+        # else:
+        #     new_root_files_sqlite = user_file_selection(new_root_for_sqlite)
 
     elif conversion_choice == '3':
-        if not new_root_for_sqlite:
-            print('No new root files found for SQLite.')
+        # Convert to Parquet
         if not new_root_for_parquet:
             print('No new root files found for Parquet.')
         else:
