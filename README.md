@@ -55,7 +55,7 @@ root2data/
 
 ```
 ## ROOT file structure:
-#### Our ROOT files are of version 6.30 and contain the following structure:
+#### Our ROOT files have the following structure:
 
 ```
 root_file/
@@ -81,6 +81,7 @@ root_file/
     ...
     └── variable_M.N
 ```
+The .root files used for conversion had been generated with ROOT6.30 but the simple structure of these file ensure compatibility with most updated ROOT versions.
 ## Prerequisites
 
 The following will create a python virual environment at the same time activate it:
