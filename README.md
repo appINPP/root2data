@@ -147,6 +147,13 @@ python3 main.py --features eventNumber digitX digitY digitZ
 ### 1 big ROOT file
 ![Screenshot](./images/bigfile.png)
 
+
+## Communication
+Please feel free to contact
+
+<a href="mailto:appinpp.group@gmail.com?"><img src="https://img.shields.io/badge/gmail-%23DD0031.svg?&style=for-the-badge&logo=gmail&logoColor=white"/></a>
+
+appinpp.group@gmail.com
 ## License
 
 This project is licensed under the Apache License. See the [LICENSE](https://github.com/appINPP/root2data/blob/main/LICENSE) for details.
