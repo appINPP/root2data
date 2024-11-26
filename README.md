@@ -5,11 +5,25 @@
 
 ## Abstract
 
-This repository provides a Python toolset for converting ROOT files to another format. 
-It includes functionalities for reading data from ROOT files and saving them as other file formats.
-Additionally, we can explore the file structure & print a dataframe. 
+This repository provides a Python toolset for converting ROOT files to another format. It includes functionalities for reading data from ROOT files branches and saving them as other file formats.
+
+Additionally, we can explore the file structure & print a dataframe. Furthermore, the mutual compatibility and installation of the Python packages used to read and convert .root files ensure minimal dependency conflicts
 
 **<ins>The scope of this work, was to create a general tool for converting ROOT files to other formats.</ins>**
+
+## Usage
+
+1) _Directory Structure_ - Construct the following directories in your project:
+    - data/root: Ensure that you have this directory containing ROOT files.
+    - data/h5: Directory where HDF5 files will be saved (if not present it will be created).
+    - data/sqlite: Directory where SQLite files will be saved (if not present it will be created).
+    - data/parquet: Directory where Parquet files will be saved (if not present it will be created).
+
+    
+2) _User Interface_ -  Upon running the script, you'll be prompted to choose one of the following options:
+    - Read a HDF5 | SQLite | Parquet file
+    - Convert ROOT files to HDF5 | SQLite | Parquet
+    - Exit the program.
 
 ## Project structure:
 
@@ -40,17 +54,33 @@ root2data/
     └── transform.py
 
 ```
-## Usage
+## ROOT file structure:
+#### Our ROOT files are of version 6.30 and contain the following structure:
 
-1) Directory Structure: Ensure you have the following directories set up in your working directory:
-    - data/root: Directory containing ROOT files.
-    - data/h5: Directory where HDF5 files will be saved.
-    
-2) User Interface: Upon running the script, you'll be prompted to choose one of the following options:
-    - Read an existing HDF5 file.
-    - Convert ROOT files to HDF5 format.
-    - Exit the program.
-
+```
+root_file/
+│
+├── Tree;1/
+│   ├── variable_1.1
+│   ├── variable_1.2
+│   ├── variable_1.3
+│   ...
+│   └── variable1_N
+│
+├── Tree;2
+│   ├── variable_2.1
+│   ├── variable_2.2
+│   ├── variable_2.3
+│   ...
+│   └── variable_2.N
+...
+└── Tree;M/
+    ├── variable_M.1
+    ├── variable_M.2
+    ├── variable_M.3
+    ...
+    └── variable_M.N
+```
 ## Prerequisites
 
 The following will create a python virual environment at the same time activate it:
@@ -106,9 +136,9 @@ python3 main.py --features eventNumber digitX digitY digitZ
   
 
 
-## Time testing
+## Conversion Time Comparisons
 
-### 1 random ROOT files
+### 1 random ROOT file
 ![Screenshot](./images/onefile.png)
 
 ### 10 ROOT files
