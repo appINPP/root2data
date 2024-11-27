@@ -152,7 +152,7 @@ def main():
                 print(f"Conversion completed. SQLite files saved to {sqlite_dir}")
 
             if new_root_files_parquet:
-                print(f"Converting {len(new_root_files_h5)} ROOT files to Parquet format...")
+                print(f"Converting {len(new_root_files_parquet)} ROOT files to Parquet format...")
                 root2parquet(features, new_root_files_parquet, parquet_dir)
                 print(f"Conversion completed. Parquet files saved to {parquet_dir}")
 
