@@ -108,7 +108,7 @@ git clone https://github.com/appINPP/root2data.git
 
 3. #### Execute the main.py and select the desired features (**seperate them with space**).
 ```
-python3 main.py --features eventNumber digitX digitY digitZ
+python3 main.py --features event feature_X feature_Y feature_Z
 ```
 
 4. #### You are prompted to select an action (here, we select 2).
