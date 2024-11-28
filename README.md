@@ -84,7 +84,7 @@ root_file/
 The .root files used for conversion had been generated with ROOT6.30 but the simple structure of these file ensure compatibility with most updated ROOT versions.
 ## Prerequisites
 
-The following will create a python virual environment at the same time activate it:
+The following will create a python virtual environment at the same time activate it:
 
 ```
 source create_env.sh
@@ -113,27 +113,27 @@ python3 main.py --features eventNumber digitX digitY digitZ
 
 4. #### You are prompted to select an action (here, we select 2).
    
-   ![alt text](/images/root2data1.png)
+   ![alt text](/images/01.png)
 
 5. #### In this section, we can determine the format of the output file (here, we select 1).
    
-   ![alt text](/images/root2data2.png)
+   ![alt text](/images/02.png)
    
-6. #### You can choose to convert all detected root files or choose specific files (here, we select 3,4).
+6. #### You can choose to convert all detected root files or choose specific files (here, we select 1).
    
-   ![alt text](/images/root2data3.png)
+   ![alt text](/images/03.png)
 
 7.  #### The conversion pipeline is initiated and the files are converted. Our process indicates if the declared features are found and in which root file tree.
    
-   ![alt text](/images/root2data4.png)
+   ![alt text](/images/04.png)
 
 8.  #### After conversion you are ready read the h5 files that you created by.
    
-  ![alt text](/images/root2data5.png)
+  ![alt text](/images/05.png)
   
 9. #### For the h5 file, you can also read the data structure and print it as a dataframe.
    
-  ![alt text](/images/root2data6.png)
+  ![alt text](/images/06.png)
   
 
 
