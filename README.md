@@ -25,7 +25,7 @@ Additionally, we can explore the file structure & print a dataframe. Furthermore
     - Convert ROOT files to HDF5 | SQLite | Parquet
     - Exit the program.
 
-## Project structure:
+## Project structure
 
 ```
 root2data/
@@ -54,8 +54,8 @@ root2data/
     └── transform.py
 
 ```
-## ROOT file structure:
-#### Our ROOT files have the following structure:
+## ROOT file structure
+##### Our ROOT files have the following simple structure:
 
 ```
 root_file/
@@ -81,20 +81,32 @@ root_file/
     ...
     └── variable_M.N
 ```
-The .root files used for conversion had been generated with ROOT6.30 but the simple structure of these file ensure compatibility with most updated ROOT versions.
+
 ## Prerequisites
 
-The following will create a python virtual environment at the same time activate it:
+#### _Method 1:_
+   
+  The following will create a python virtual environment at the same time activate it:
 
 ```
 source create_env.sh
 ```
 
-Then execute the following to install required packages:
+#### _Method 2:_
+  
+  Another way is to create the virtual environment manually:
+```
+python3 -m venv root2data
+```
+  After that, activate the virtual environment:
+```
+source root2data/bin/activate
+```
+  Then execute the following to install required packages:
 ```
 pip install -r requirements.txt
 ```
-You have now created a virtual env called *root2data*
+Both methods, assure that you have  created a virtual env called *root2data*
 
 ## Walkthrough
 
