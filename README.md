@@ -7,7 +7,7 @@
 
 This repository provides a Python toolset for converting ROOT files to another format. It includes functionalities for reading data from ROOT files branches and saving them as other file formats.
 
-Additionally, we can explore the file structure & print a dataframe. Furthermore, the mutual compatibility and installation of the Python packages used to read and convert .root files ensure minimal dependency conflicts
+Additionally, we can explore the file structure & print a dataframe. Τhe mutual compatibility and installation of the Python packages used to read and convert .root files ensure minimal dependency conflicts.
 
 **<ins>The scope of this work, was to create a general tool for converting ROOT files to other formats.</ins>**
 
@@ -86,7 +86,7 @@ root_file/
 
 #### _Method 1:_
    
-  The following will create a python virtual environment at the same time activate it:
+  The following will create a python virtual environment and at the same time activate it:
 
 ```
 source create_env.sh
@@ -106,7 +106,7 @@ source root2data/bin/activate
 ```
 pip install -r requirements.txt
 ```
-Both methods, assure that you have  created a virtual env called *root2data*
+Both methods, assure that you have created a virtual env called *root2data*
 
 ## Walkthrough
 
@@ -157,7 +157,7 @@ python3 main.py --features event feature_X feature_Y feature_Z
 ### 10 ROOT files
 ![Screenshot](./images/10file.png)
 
-### 1 big ROOT file
+### 1 bigger ROOT file
 ![Screenshot](./images/bigfile.png)
 
 
