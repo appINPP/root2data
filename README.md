@@ -171,3 +171,6 @@ appinpp.group@gmail.com
 
 This project is licensed under the Apache License. See the [LICENSE](https://github.com/appINPP/root2data/blob/main/LICENSE) for details.
 
+## Contributing
+User contributions can be submitted via pull request on GitHub. We recommend that you create your own fork of root2data on GitHub and use it to submit your patches.
+
