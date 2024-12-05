@@ -1,5 +1,7 @@
 <img width="256" alt="ROOT2Data_1" src="https://github.com/user-attachments/assets/5a104cd6-f1b6-4096-adde-716d1459ffcf"> 
 
+[![DOI](https://zenodo.org/badge/837682122.svg)](https://doi.org/10.5281/zenodo.14281076) 
+
 # Convert .root files to other data formats 
 #### *from ROOT..  to HDF5/ SQLite/ Parquet*  💻 ⚙️
 
