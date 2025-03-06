@@ -53,9 +53,9 @@ def save_to_parquet(arrays: Dict[str, np.ndarray], parquet_path: str) -> None:
         write_statistics=True
     )
     
-    print(f'Successfully wrote data to {parquet_path}')
+    print(f'Data has been successfully written to {parquet_path}')
     print(5 * '-----------------------------------')
-
+    
 def parquet_to_dataframe(parquet_path: str) -> pd.DataFrame:
     """
     Reads a Parquet file into a pandas DataFrame with optimized performance.
