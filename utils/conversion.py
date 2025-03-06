@@ -47,12 +47,13 @@ def root2h5(features: List[str], root_files: List[str], h5_dir:str) -> None:
         >>> convert_new_root_files(root_files, h5_dir)
     """
     # start_time = time.time()
-    for file in root_files:
+    for file_ in root_files:
         # columns_to_find = ['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']#IMPORTANT: columns to extract from the ROOT file should be dynamic
         # features = ['pseudo_runid', 'pseudo_subRunid', 'pseudo_livetime', 'evt_id', 'evt_num', 'evt_overlays', 'reco_type', 'jbeta0', 'jbeta0_deg', 'D', 'D3d', 'cos_zen', 'fi', 'R', 'mean_tres_it', 'zenith', 'logEreco', 'Ereco', 'E_mu_max', 'E_mu_depos', 'E_bundle', 'E_visible', 'logE_visible', 'E_nu', 'multiplicity_muon', 'multiplicity_neutrino', 'logEreco2', 'logbeta0', 'jlik', 'GNhit', 'Snpe', 'SnpeT', 'Slen', 'Elen', 'best_trk_pos_x', 'best_trk_pos_y', 'best_trk_pos_z', 'best_trk_dir_x', 'best_trk_dir_y', 'best_trk_dir_z', 'Q1', 'Q1new', 'diffangle', 'delta_zenith', 'mu_pos_x', 'mu_pos_y', 'mu_pos_z', 'mu_dir_x', 'mu_dir_y', 'mu_dir_z', 'nu_pos_x', 'nu_pos_y', 'nu_pos_z', 'nu_dir_x', 'nu_dir_y', 'nu_dir_z', 'cos_zen_mu', 'zenith_mu', 'logE_mu', 'logE_nu', 'logEbundle', 'logEdepos', 'bjorken_y', 'cos_zen_nu', 'zenith_nu', 'w1', 'w2', 'w3atm', 'w3iceHESE', 'w3loi', 'w3random', 'w3ice', 'w3antares', 'w3new', 'neutrino_ngen', 'neutrino_type', 'neutrino_interaction', 'Ntrack_all', 'Nallbehind', 'Nallbehind2', 'Nallbehind3', 'NtrackIT10', 'NtrackIT30', 'NtrackIT', 'NtrackEarly', 'NtrackLate', 'TrLengthIT', 'TrLengthIT_2', 'TrLengthIT_3', 'ratio130', 'ratio430', 'ratio330', 'ratio110', 'ratio410', 'ratio310', 'ratio1', 'ratio2', 'ratio3', 'ratio4', 'ratio5', 'ratio6', 'ratiol', 'ratiol_trig', 'ratio4_trig', 'myratio50_muon', 'myratio30_muon', 'myratio50_cascmuon', 'myratio30_cascmuon', 'myratio50_casc', 'myratio30_casc', 'myratio50_cascmuon_over_mu', 'myratio30_cascmuon_over_mu', 'myratio50_casc_over_mu', 'myratio30_casc_over_mu', 'redToT_cascmuon_over_mu', 'redToT_casc_over_mu', 'ratio_closehits_cascmuon_over_mu', 'ratio_closehits_casc_over_mu', 'diff_theta', 'ratio_closehits_muon', 'ratio_closehits_cascmuon', 'ratio_closehits_casc', 'redToT_muon', 'redToT_cascmuon', 'redToT_casc', 'diff_dist_mu', 'diff_dist_casc_mu', 'diff_dist_casc', 'max_lik_down', 'max_lik_up', 'costheta_min', 'costheta_max', 'num_of_good_sol', 'downsol', 'upsol', 'nhits_casc', 'nhits_casc_100', 'sum_ToT_casc', 'min_dist_casc', 'max_dist_casc', 'nhits_mu', 'nhits_mu_100', 'sum_ToT_mu', 'min_dist_mu', 'max_dist_mu', 'nhits_casc_mu', 'nhits_casc_mu_100', 'sum_ToT_casc_mu', 'min_dist_casc_mu', 'max_dist_casc_mu', 'min_diff_sollik', 'max_diff_sollik', 'min_diff_sol', 'max_diff_sol', 'min_zen_sol', 'max_zen_sol', 'diffangle_shower_nu', 'diffangle_shower_mu', 'delta_zenith_shower_mu', 'delta_zenith_shower_nu', 'zenith_shower', 'beta0_shower', 'beta0_shower_deg', 'lik_shower', 'Nhit_shower', 'best_trk_pos_shower_x', 'best_trk_pos_shower_y', 'best_trk_pos_shower_z', 'best_trk_dir_shower_x', 'best_trk_dir_shower_y', 'best_trk_dir_shower_z', 'Ereco_shower', 'Ereco_shower_corrected', 'logEreco_shower', 'dlik', 'normdlik', 'itoverlen', 'delta_zenith_track_shower', 'diffangle_track_shower', 'flag_muon_3D', 'flag_shower_3D', 'flag_shower_MX', 'ToT_border_mu', 'ToT_border_casc', 'ToT_border_cascmu', 'ToT_trig', 'max_ToT_trig', 'ToT_IT', 'ToT_allIT', 'Nborder_hits', 'Nborder_cherenkov_hits', 'Nborder_dtres_hits', 'Nborder_DOMs', 'Nhits_upper', 'Nhits_lower', 'Nhits_border_upper', 'Nhits_border_lower', 'Nhits_cherenkov_upper', 'Nhits_cherenkov_lower', 'Nhits_border_cherenkov_upper', 'Nhits_border_cherenkov_lower', 'NtrackIT50', 'NtrackIT50_2', 'NtrackIT30_2', 'NtrackIT10_2', 'NtrackIT50_3', 'NtrackIT30_3', 'NtrackIT10_3', 'num_triggered_hits', 'num_triggered_lines', 'num_triggered_doms', 'num_triggered_pmts', 'num_cherenkov_hits', 'num_cherenkov_lines', 'num_cherenkov_doms', 'num_cherenkov_pmts', 'num_cascade_hits', 'num_cascade_lines', 'num_cascade_doms', 'num_cascade_pmts', 'ratio_cherenkov_hits', 'ratio_cherenkov_lines', 'ratio_cherenkov_doms', 'ratio_cherenkov_pmts', 'ratio_cascade_hits', 'ratio_cascade_lines', 'ratio_cascade_doms', 'ratio_cascade_pmts', 'associated_n_hits', 'reco_tres_vector', 'reco_d_photon_vector', 'reco_d_closest_vector', 'reco_cos_angle_vector', 'diff_cos_angle', 'hit_pos_x', 'hit_pos_y', 'hit_pos_z', 'hit_dir_x', 'hit_dir_y', 'hit_dir_z', 'hit_time', 'hit_tot', 'first_hit_tot_per_pmt', 'hit_a', 'is_triggered', 'is_cherenkov']
-        h5_file_path = os.path.join(h5_dir, os.path.basename(file).replace('.root', '.h5'))
-        array_data_dict = root_to_dict_of_arrays(file, features)
-        awkward_array = root_to_awkward_arrays(file, features) #NOTE: awkward array is not used 
+        h5_file_path = os.path.join(h5_dir, os.path.basename(file_).replace('.root', '.h5'))
+        array_data_dict = root_to_dict_of_arrays(file_, features)
+        # awkward_array = root_to_awkward_arrays(file_, features) #NOTE: awkward array is not used 
+        awkward_array = None
         save_to_h5(array_data_dict, awkward_array, h5_file_path) 
     # end_time = time.time()
     # print(f"HDF5 conversion completed in {end_time - start_time:.2f} seconds")
@@ -60,8 +61,8 @@ def root2h5(features: List[str], root_files: List[str], h5_dir:str) -> None:
 
 
 def convert_branches_to_sqlite(root_file_path, tree_name, branch_names, sqlite_db_path):
-    with uproot.open(root_file_path) as file:
-        tree = file[tree_name]
+    with uproot.open(root_file_path) as file_:
+        tree = file_[tree_name]
 
         conn = sqlite3.connect(sqlite_db_path)
         cursor = conn.cursor()
@@ -185,8 +186,8 @@ def root2parquet(features: List[str], root_files: List[str], parquet_dir:str):
     """
     for file_ in root_files:
         # features = ['eventNumber', 'digitX', 'digitY', 'digitZ', 'digitT', 'trueNeutrinoEnergy', 'trueMuonEnergy']#IMPORTANT: columns to extract from the ROOT file should be dynamic
-        sqlite_file_path = os.path.join(parquet_dir, os.path.basename(file_).replace('.root', '.parquet'))
+        parquet_file_path = os.path.join(parquet_dir, os.path.basename(file_).replace('.root', '.parquet'))
         array_data_dict = root_to_dict_of_arrays(file_, features)
         # awkward_array = root_to_awkward_arrays(file_, features) #NOTE: awkward array is not used 
-        save_to_parquet(array_data_dict, sqlite_file_path)
+        save_to_parquet(array_data_dict, parquet_file_path)
     return None
