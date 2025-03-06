@@ -18,7 +18,23 @@
 import os
 from typing import List
 
+def list_root_files(root_dir: str) -> List[str]:
+    """
+    Lists all HDF5 files in the given directory.
 
+    Parameters:
+        - h5_dir (str): Directory to search for HDF5 files.
+
+    Returns:
+        - List[str]: List of HDF5 file paths.
+    
+    Example:
+    >>> list_root_files("data/root")
+    ['file_1.root', 'file_2.root']
+    """
+    root_files = [f for f in os.listdir(root_dir) if f.endswith('.root')]
+    return root_files    
+    
 def list_h5_files(h5_dir: str) -> List[str]:
     """
     Lists all HDF5 files in the given directory.
