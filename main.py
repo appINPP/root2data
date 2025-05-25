@@ -18,7 +18,7 @@ from utils.file_ops import list_h5_files, list_sqlite_files
 from utils.conversion import root2h5, root2sqlite, root2parquet, convert_branches_to_sqlite
 from utils.data_ops import create_dataframe_and_show_structure
 from utils.sqlite_ops import get_table_names, sqlite_to_dataframe, read_sqlite_to_df
-from utils.parquet_ops import parquet_to_dataframe
+from utils.parquet_ops import parquet_to_dataframe, process_parquet_format
 from utils.file_ops import list_h5_files, list_sqlite_files, list_parquet_files, list_root_files
 from utils.ui_ops import user_file_selection, scan_for_new_root_files
 
@@ -32,6 +32,7 @@ def parse_arguments():
     parser.add_argument('--root_dir', help='Path to the ROOT file directory.')
     parser.add_argument('--output', help='The final output files converted.')
     parser.add_argument('--mode',  help='The transformation mode to apply to the data.')
+    parser.add_argument('--format', help='The format structure to use for processing parquet files.')
     # If we want comma-separated features into a list then uncomment the following lines
     args = parser.parse_args()
     if args.features:
@@ -113,5 +114,9 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+        args = parse_arguments()
+        if args.output == 'parquet' and  args.format == 'graphnet':
+            process_parquet_format(args.features)
+            pass
     except Exception as error_main:
         print('[main error]:', error_main)

@@ -9,3 +9,4 @@
 .test/
 .vscode/
 data/*
+utils/__pycache__
