@@ -111,7 +111,8 @@ def process_parquet_format(features: list) -> None:
             # length = len(row[first_col])
 
             for i in range(length):
-                entry = {'evt_id': evt_id}
+                # entry = {'evt_id': evt_id}
+                entry = {}
                 for col in df.columns:
                     try:
                         entry[col] = row[col][i]
@@ -148,14 +149,17 @@ def process_parquet_format(features: list) -> None:
         # os.makedirs(truth_dir, exist_ok = True)
         for subdir in ['features', 'truth', 'weights']:
             os.makedirs(os.path.join(base_dir, subdir), exist_ok=True)
-
+        
+        features_dir = os.path.join(base_dir, 'features')
+        truth_dir = os.path.join(base_dir, 'truth')
         # features = ['hit_pos_x', 'hit_pos_y', 'hit_pos_z', 'hit_dir_x', 'hit_dir_y',
         # 'hit_dir_z', 'hit_time', 'hit_tot', 'first_hit_tot_per_pmt',
         # 'is_triggered', 'is_cherenkov']
 
-        truth = ['logE_visible', 'logE_nu', 'logE_mu',
-        'pseudo_runid', 'pseudo_livetime', 'evt_num',
-        'num_triggered_pmts']
+        # truth = ['logE_visible', 'logE_nu', 'logE_mu',
+        # 'pseudo_runid', 'pseudo_livetime', 'evt_num',
+        # 'num_triggered_pmts']
+        truth = features[-1]
 
         # df = pd.read_parquet(f'parquet/{filename}')
         df = pd.read_parquet(input_file)
@@ -164,14 +168,15 @@ def process_parquet_format(features: list) -> None:
         expanded_df = expand_parquet_file(features_df)
         print(expanded_df.keys(), expanded_df.index)
 
-        final_df = expanded_df.set_index('evt_id')
+        final_df = expanded_df.set_index('eventNumber')
         print(final_df.keys(), final_df.index)
 
-        truth_df = df[truth].set_index(df['evt_id']) #FIXME: I do not understand what should be decided as truth
+        truth_df = df[['eventNumber', truth]].set_index(df['eventNumber']) #FIXME: I do not understand what should be decided as truth
+        truth_df = truth_df.drop('eventNumber', axis=1)
+        
+        file_id = filename.split(".")[1]
+        
+        final_df.to_parquet(os.path.join(features_dir, f"features_{file_id}.parquet"))
+        truth_df.to_parquet(os.path.join(truth_dir, f"truth_{file_id}.parquet"))
 
-        feat_file = os.path.join(features_dir, "features_0.parquet")
-        truth_file = os.path.join(truth_dir, "truth_0.parquet")
-
-        final_df.to_parquet(feat_file)
-        truth_df.to_parquet(truth_file)
         pass

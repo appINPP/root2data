@@ -117,6 +117,6 @@ if __name__ == "__main__":
         args = parse_arguments()
         if args.output == 'parquet' and  args.format == 'graphnet':
             process_parquet_format(args.features)
-            pass
+            print(f'✅ Parquet files processed -> please check data/processed_parquet folder')
     except Exception as error_main:
         print('[main error]:', error_main)
