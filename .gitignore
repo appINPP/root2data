@@ -8,5 +8,6 @@
 .env/
 .test/
 .vscode/
+.root2data/
 data/*
 utils/__pycache__
