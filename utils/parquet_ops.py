@@ -71,7 +71,7 @@ def parquet_to_dataframe(parquet_path: str) -> pd.DataFrame:
     """
     return pd.read_parquet(parquet_path)
 
-def process_parquet_format(features: list) -> None:
+def process_parquet_format_old(features: list) -> None:
     """
     """
     parquet_data_path = os.path.join(os.getcwd(), 'data', 'parquet')
@@ -178,5 +178,120 @@ def process_parquet_format(features: list) -> None:
         
         final_df.to_parquet(os.path.join(features_dir, f"features_{file_id}.parquet"))
         truth_df.to_parquet(os.path.join(truth_dir, f"truth_{file_id}.parquet"))
+        pass
 
+def process_parquet_format(features: list, truth: list, index_col: str )-> None:
+    """
+    Processes Parquet files by splitting them into feature and truth columns, expanding nested columns, 
+    and saving the processed data into a structured directory format.
+
+    This function reads all Parquet files from a predefined input directory, expands any columns containing 
+    nested or array-like data so that each entry is represented as a separate row, and then separates the 
+    data into features and truth datasets. The processed data is saved into a new directory structure, 
+    organized by table name and data type (features, truth, weights).
+
+    Parameters:
+        - features (list): 
+            List of column names to be used as features. These columns will be extracted and expanded 
+            if they contain nested or array-like data.
+        - truth (list): 
+            List of column names to be used as truth labels. These columns will be extracted and saved 
+            separately from the features.
+        - index_col (str): 
+            Name of the column to be used as the index for both features and truth DataFrames.
+
+    Directory Structure:
+        - Input Parquet files are expected in: ./data/parquet/
+        - Output is saved in: ./data/processed_parquet/{table_name}/
+            - features/
+            - truth/
+            - weights/
+
+    Notes:
+        - The function assumes that the input Parquet files are flat or contain columns with array-like 
+            data that can be expanded.
+        - Each processed file is saved with a unique identifier derived from the original filename.
+        - Existing directories are created as needed; existing files may be overwritten.
+
+    Raises:
+        - FileNotFoundError: If an expected input file is missing.
+        - Exception: For errors encountered during file reading, expansion, or writing.
+
+    Example:
+        >>> process_parquet_format(
+            features=['feature1', 'feature2'],
+            truth=['label'],
+            index_col='event_id'
+        )
+    """
+    
+    parquet_data_path = os.path.join(os.getcwd(), 'data', 'parquet')
+    output_dir = os.path.join(os.getcwd(), 'data', 'processed_parquet')
+    parquet_files = list_parquet_files(parquet_data_path)
+
+    dirs = [d for d in parquet_files if os.path.isdir(os.path.join(f'parquet/{d}'))]
+
+    def expand_parquet_file(df): 
+        expanded = []
+
+        for evt_id, row in df.iterrows():
+            first_value = row[features[0]]
+
+            if hasattr(first_value, '__len__') and not isinstance(first_value, str):
+                length = len(first_value)
+            else:
+                length = 1
+
+            for i in range(length):
+                entry = {}
+                for col in df.columns:
+                    try:
+                        if length == 1:
+                            entry[col] = row[col]
+                        else:
+                            entry[col] = row[col][i]
+                    except Exception:
+                        entry[col] = row[col]
+                expanded.append(entry)
+
+        expanded_df = pd.DataFrame(expanded)
+        return expanded_df
+
+    for filename in parquet_files:
+        input_file = os.path.join(parquet_data_path, filename)
+        print(filename)
+
+        if filename.split('.parquet')[0] in dirs: 
+            continue
+
+        if not os.path.isfile(input_file):
+            print(f"Input file not found: {input_file}")
+            continue
+
+        table_name = filename.split(".parquet")[0]
+        print(table_name)
+        base_dir = os.path.join(output_dir, table_name)
+        print(base_dir)
+        os.makedirs(base_dir, exist_ok = True)
+
+        for subdir in ['features', 'truth', 'weights']:
+            os.makedirs(os.path.join(base_dir, subdir), exist_ok=True)
+
+        features_dir = os.path.join(base_dir, 'features')
+        truth_dir = os.path.join(base_dir, 'truth')
+        df = pd.read_parquet(input_file)
+        features_df = df[features].set_index(df[index_col])
+        expanded_df = expand_parquet_file(features_df)
+
+        # print(expanded_df.keys(), expanded_df.index)
+        final_df = expanded_df.set_index(index_col)
+        # print(final_df.keys(), final_df.index)
+
+        truth_cols = [index_col] + truth if truth else [index_col]
+        truth_df = df[truth_cols].set_index(df[index_col])
+        truth_df = truth_df.drop(index_col, axis=1)
+        file_id = filename.split(".")[1]
+
+        final_df.to_parquet(os.path.join(features_dir, f"features_{file_id}.parquet"))
+        truth_df.to_parquet(os.path.join(truth_dir, f"truth_{file_id}.parquet"))
         pass
