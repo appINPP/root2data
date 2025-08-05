@@ -110,45 +110,6 @@ pip install -r requirements.txt
 ```
 Both methods, assure that you have created a virtual env called *root2data*
 
-## Walkthrough
-
-1. Clone the repository.
-```
-git clone https://github.com/appINPP/root2data.git
-```
-![Screenshot from 2024-10-03 12-44-40](https://github.com/user-attachments/assets/985c0d09-75a7-4035-9125-296ebd91a448)
-
-2. #### Create the virtual environment, as discusssed above in the prerequisites section.
-
-3. #### Execute the main.py and select the desired features (**seperate them with space**).
-```
-python3 main.py --features event feature_X feature_Y feature_Z
-```
-
-4. #### You are prompted to select an action (here, we select 2).
-   
-   ![alt text](/images/01.png)
-
-5. #### In this section, we can determine the format of the output file (here, we select 1).
-   
-   ![alt text](/images/02.png)
-   
-6. #### You can choose to convert all detected root files or choose specific files (here, we select 1).
-   
-   ![alt text](/images/03.png)
-
-7.  #### The conversion pipeline is initiated and the files are converted. Our process indicates if the declared features are found and in which root file tree.
-   
-   ![alt text](/images/04.png)
-
-8.  #### After conversion you are ready read the h5 files that you created by.
-   
-  ![alt text](/images/05.png)
-  
-9. #### For the h5 file, you can also read the data structure and print it as a dataframe.
-   
-  ![alt text](/images/06.png)
-  
 
 
 ## Conversion Time Comparisons
