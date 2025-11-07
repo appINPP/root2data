@@ -14,6 +14,7 @@
 # 
 from html import parser
 import os
+import pandas as pd
 import argparse
 from utils.file_ops import list_h5_files, list_sqlite_files
 from utils.conversion import root2h5, root2sqlite, root2parquet, convert_branches_to_sqlite
@@ -110,22 +111,35 @@ def main():
         elif output == 'parquet':
             print(f" ⌛ Reading Parquet files..")
             if args.format == 'graphnet':
-                for i in range(10):
-                    base_dir = os.path.join(os.path.dirname(root_dir),"processed_parquet", f"phase2tree.{i}")
-                    subdirs = ["features", "truth"]
-                    for sub in subdirs:
-                        parquet_read_dir = os.path.join(base_dir, sub)
-                        if not os.path.exists(parquet_read_dir):
-                            print(f"Directory not found: {parquet_read_dir}")
-                            continue
-                        parquet_files = [os.path.join(parquet_read_dir, x) for x in list_parquet_files(parquet_read_dir)]
-                        print(f"Available Parquet files in {parquet_read_dir}: {list_parquet_files(parquet_read_dir)}\n")
-                        for file_ in parquet_files:
-                            print(f" ⚙️ file: {file_}")
-                            df = parquet_to_dataframe(file_)
-                            print(df)
-                            print(5* '-----------------------------------')
-                    print(f" ✅ Parquet files from processed_parquet/features and truth read successfully!")
+                processed_dir = os.path.join(os.path.dirname(root_dir), "processed_parquet")
+                if not os.path.exists(processed_dir):
+                    print(f"❌ Processed parquet directory not found: {processed_dir}")
+                    return
+                
+                # Scan for any directories in processed_parquet
+                for entry in os.scandir(processed_dir):
+                    if entry.is_dir():
+                        base_dir = entry.path
+                        subdirs = ["features", "truth"]
+                        for sub in subdirs:
+                            parquet_read_dir = os.path.join(base_dir, sub)
+                            if os.path.exists(parquet_read_dir):
+                                print(f"Processing {parquet_read_dir}...")
+                                # Process directory contents
+                                parquet_files = [f for f in os.listdir(parquet_read_dir) 
+                                               if f.endswith('.parquet')]
+                                for pfile in parquet_files:
+                                    file_path = os.path.join(parquet_read_dir, pfile)
+                                    try:
+                                        df = pd.read_parquet(file_path)
+                                        print(f"✅ Successfully read {pfile}")
+                                        print(f"Shape: {df.shape}")
+                                    except Exception as e:
+                                        print(f"❌ Error reading {pfile}: {str(e)}")
+                            else:
+                                print(f"Directory not found: {parquet_read_dir}")
+                                continue
+                print(f" ✅ Parquet files from processed_parquet/features and truth read successfully!")
             else:
                 parquet_read_dir = parquet_dir
                 parquet_files = [os.path.join(parquet_read_dir, x) for x in list_parquet_files(parquet_read_dir)]
