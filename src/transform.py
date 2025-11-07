@@ -292,7 +292,7 @@ def get_tree_branches(root_file, columns_to_find) -> Dict[str, List[str]]:
             tree_dict[tree_name] = tree_list
             print(f"Found columns: {tree_list} in tree: {tree_name} for file: {os.path.basename(root_file.file_path)}")
         else:
-            print(f"Columns not found in tree: {tree_name}")
+            print(f"Columns {columns_to_find} not found in tree: {tree_name}")
          # add tree basename to the set, after we have extracted the branches
         tree_basenames.add(tree_name)
     return tree_dict

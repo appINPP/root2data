@@ -180,84 +180,46 @@ def parquet_to_dataframe(parquet_path: str) -> pd.DataFrame:
 #         truth_df.to_parquet(os.path.join(truth_dir, f"truth_{file_id}.parquet"))
 #         pass
 
-def process_parquet_format(features: list, truth: list, index_col: str )-> None:
+def process_parquet_format(features: list, truth: list, index_col: str) -> None:
     """
-    Processes Parquet files by splitting them into feature and truth columns, expanding nested columns, 
-    and saving the processed data into a structured directory format.
-
-    This function reads all Parquet files from a predefined input directory, expands any columns containing 
-    nested or array-like data so that each entry is represented as a separate row, and then separates the 
-    data into features and truth datasets. The processed data is saved into a new directory structure, 
-    organized by table name and data type (features, truth, weights).
-
-    Parameters:
-        - features (list): 
-            List of column names to be used as features. These columns will be extracted and expanded 
-            if they contain nested or array-like data.
-        - truth (list): 
-            List of column names to be used as truth labels. These columns will be extracted and saved 
-            separately from the features.
-        - index_col (str): 
-            Name of the column to be used as the index for both features and truth DataFrames.
-
-    Directory Structure:
-        - Input Parquet files are expected in: ./data/parquet/
-        - Output is saved in: ./data/processed_parquet/{table_name}/
-            - features/
-            - truth/
-            - weights/
-
-    Notes:
-        - The function assumes that the input Parquet files are flat or contain columns with array-like 
-            data that can be expanded.
-        - Each processed file is saved with a unique identifier derived from the original filename.
-        - Existing directories are created as needed; existing files may be overwritten.
-
-    Raises:
-        - FileNotFoundError: If an expected input file is missing.
-        - Exception: For errors encountered during file reading, expansion, or writing.
-
-    Example:
-        >>> process_parquet_format(
-            features=['feature1', 'feature2'],
-            truth=['label'],
-            index_col='event_id'
-        )
+    Processes Parquet files by splitting them into feature and truth columns.
+    Falls back to 'eventNumber' as index if specified index_col is not found.
     """
-    
     parquet_data_path = os.path.join(os.getcwd(), 'data', 'parquet')
     output_dir = os.path.join(os.getcwd(), 'data', 'processed_parquet')
     parquet_files = list_parquet_files(parquet_data_path)
 
     dirs = [d for d in parquet_files if os.path.isdir(os.path.join(f'parquet/{d}'))]
 
-    def expand_parquet_file(df): 
+    def expand_parquet_file(df, index_col_local):
         expanded = []
+        # Choose a column to determine sequence length (exclude the index)
+        first_col = next((c for c in df.columns if c != index_col_local), None)
+        
+        for _, row in df.iterrows():
+            if first_col is None:
+                expanded.append({index_col_local: row[index_col_local]})
+                continue
 
-        for evt_id, row in df.iterrows():
-            first_value = row[features[0]]
-
-            if hasattr(first_value, '__len__') and not isinstance(first_value, str):
-                length = len(first_value)
-            else:
-                length = 1
+            first_value = row[first_col]
+            length = len(first_value) if hasattr(first_value, '__len__') and not isinstance(first_value, str) else 1
 
             for i in range(length):
                 entry = {}
                 for col in df.columns:
                     try:
-                        if length == 1:
-                            entry[col] = row[col]
+                        val = row[col]
+                        if length > 1 and hasattr(val, '__len__') and not isinstance(val, str):
+                            entry[col] = val[i]
                         else:
-                            entry[col] = row[col][i]
+                            entry[col] = val
                     except Exception:
                         entry[col] = row[col]
                 expanded.append(entry)
 
-        expanded_df = pd.DataFrame(expanded)
-        return expanded_df
+        return pd.DataFrame(expanded)
 
-    for filename in parquet_files:
+    for i, filename in enumerate(parquet_files):
         input_file = os.path.join(parquet_data_path, filename)
         print(filename)
 
@@ -267,31 +229,58 @@ def process_parquet_format(features: list, truth: list, index_col: str )-> None:
         if not os.path.isfile(input_file):
             print(f"Input file not found: {input_file}")
             continue
-
+        
         table_name = filename.split(".parquet")[0]
         print(table_name)
         base_dir = os.path.join(output_dir, table_name)
         print(base_dir)
-        os.makedirs(base_dir, exist_ok = True)
+        os.makedirs(base_dir, exist_ok=True)
 
-        for subdir in ['features', 'truth', 'weights']:
+        for subdir in ['features', 'truth']:
             os.makedirs(os.path.join(base_dir, subdir), exist_ok=True)
 
         features_dir = os.path.join(base_dir, 'features')
         truth_dir = os.path.join(base_dir, 'truth')
+
+        # Read parquet
         df = pd.read_parquet(input_file)
-        features_df = df[features].set_index(df[index_col])
-        expanded_df = expand_parquet_file(features_df)
+        
+        # Check index column and fall back if needed
+        effective_index = index_col
+        if index_col not in df.columns:
+            if 'eventNumber' in df.columns:
+                print(f"⚠️ index_col '{index_col}' not found, falling back to 'eventNumber' as index")
+                effective_index = 'eventNumber'
+            else:
+                print(f"❌ Neither '{index_col}' nor 'eventNumber' found in {filename}. Available columns: {list(df.columns)}. Skipping file.")
+                continue
 
-        # print(expanded_df.keys(), expanded_df.index)
-        final_df = expanded_df.set_index(index_col)
-        # print(final_df.keys(), final_df.index)
+        # Determine available feature and truth columns
+        requested_features = features or []
+        requested_truth = truth or []
 
-        truth_cols = [index_col] + truth if truth else [index_col]
-        truth_df = df[truth_cols].set_index(df[index_col])
-        truth_df = truth_df.drop(index_col, axis=1)
-        file_id = filename.split(".")[1]
+        available_features = [f for f in requested_features if f in df.columns]
+        if not available_features:
+            print(f"⚠️ No requested feature columns found in {filename}. Available columns: {list(df.columns)}")
+            # Create empty features file with just the index
+            features_df = pd.DataFrame(index=df[effective_index])
+            features_df.to_parquet(os.path.join(features_dir, f"features_{i}.parquet"))
+        else:
+            # Process features
+            features_sub_df = df[available_features + [effective_index]].copy()
+            expanded_df = expand_parquet_file(features_sub_df, effective_index)
+            final_df = expanded_df.set_index(effective_index)
+            final_df.to_parquet(os.path.join(features_dir, f"features_{i}.parquet"))
+            print(f"Saved features to {os.path.join(features_dir, f'features_{i}.parquet')}")
 
-        final_df.to_parquet(os.path.join(features_dir, f"features_{file_id}.parquet"))
-        truth_df.to_parquet(os.path.join(truth_dir, f"truth_{file_id}.parquet"))
-        pass
+        # Process truth (create empty if none available)
+        available_truth = [t for t in requested_truth if t in df.columns]
+        truth_cols = [effective_index] + available_truth if available_truth else [effective_index]
+        truth_df = df[truth_cols].set_index(effective_index)
+        if available_truth:
+            truth_df = truth_df[available_truth]  # Keep only truth columns
+        truth_df.to_parquet(os.path.join(truth_dir, f"truth_{i}.parquet"))
+        print(f"Saved truth to {os.path.join(truth_dir, f'truth_{i}.parquet')}")
+        print(5 * '-----------------------------------')
+
+    print("✅ Processing complete!")

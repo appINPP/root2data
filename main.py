@@ -19,7 +19,7 @@ from utils.file_ops import list_h5_files, list_sqlite_files
 from utils.conversion import root2h5, root2sqlite, root2parquet, convert_branches_to_sqlite
 from utils.data_ops import create_dataframe_and_show_structure
 from utils.sqlite_ops import get_table_names, sqlite_to_dataframe, read_sqlite_to_df
-from utils.parquet_ops_v2 import parquet_to_dataframe, process_parquet_format
+from utils.parquet_ops import parquet_to_dataframe, process_parquet_format
 from utils.file_ops import list_h5_files, list_sqlite_files, list_parquet_files, list_root_files
 from utils.ui_ops import user_file_selection, scan_for_new_root_files
 
@@ -39,9 +39,10 @@ def parse_arguments():
     # If we want comma-separated features into a list then uncomment the following lines
     args = parser.parse_args()
     if args.features:
-        args.features = args.features.split(',')
+        # split, strip whitespace and drop empty names
+        args.features = [f.strip() for f in args.features.split(',') if f.strip()]
     if args.truth:
-        args.truth = args.truth.split(',')
+        args.truth = [t.strip() for t in args.truth.split(',') if t.strip()]
     return args
     # return parser.parse_args()
 
