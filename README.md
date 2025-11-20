@@ -110,7 +110,8 @@ pip install -r requirements.txt
 ```
 Both methods, assure that you have created a virtual env called *root2data*
 
-
+## Step-by-step instructions:
+For step-by-step instructions check [WALKTHROUGH.md] (https://github.com/appINPP/root2data/blob/main/WALKTHROUGH.md) 
 
 ## Conversion Time Comparisons
 
